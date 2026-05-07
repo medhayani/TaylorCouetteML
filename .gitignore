@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ipynb_checkpoints/
+
+# venvs
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Data + heavy outputs
+data/Input/*.csv
+data/runs_*/
+runs/
+outputs/
+*.h5
+*.npz
+
+# Figures (regenerate via scripts)
+figures/
+
+# Checkpoints (LFS-tracked separately if needed)
+*.pt
+*.pth
+*.ckpt
+!checkpoints/**/best.pt        # keep the canonical 4 final-precision checkpoints
