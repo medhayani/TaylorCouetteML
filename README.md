@@ -341,3 +341,13 @@ available in `docs/`:
 
 License: research code, all rights reserved by the author. Open an
 issue if you would like a permissive license added.
+
+---
+
+## 8. Author
+
+**Mohamed Hayani Choujaa**
+
+- 📺 YouTube channel: <https://www.youtube.com/@Hayani_Choujaa_Mohamed/featured>
+- 💻 GitHub: [@medhayani](https://github.com/medhayani)
+- 📚 Reference paper: *Phys. Fluids* **33**, 074105 (2021)
