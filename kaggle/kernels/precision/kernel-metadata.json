@@ -1,0 +1,16 @@
+{
+  "id": "hayanichoujaamohamed/tcml-precision",
+  "title": "TCML Precision 500 epochs",
+  "code_file": "run.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "hayanichoujaamohamed/tcml-aux",
+    "hayanichoujaamohamed/tcml-code"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
