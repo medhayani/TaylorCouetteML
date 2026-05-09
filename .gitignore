@@ -34,3 +34,5 @@ figures/
 *.pth
 *.ckpt
 !checkpoints/**/best.pt        # keep the canonical 4 final-precision checkpoints
+!data/runs/**/*.pt             # production training outputs (LFS-tracked)
+!data/runs/**/*.pth
