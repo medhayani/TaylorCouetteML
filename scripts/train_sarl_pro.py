@@ -15,12 +15,12 @@ import yaml
 from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
 from common import set_all_seeds, get_logger
 from data_pipeline.dataset import HydraWindowsDataset
-from sarl_pro.feature_extractor import SARLProFeatureExtractor
-from sarl_pro.sac_pro import SACPro
+from models.sac_pro.feature_extractor import SARLProFeatureExtractor
+from models.sac_pro.sac_pro import SACPro
 
 
 def main():

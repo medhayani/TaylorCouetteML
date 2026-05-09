@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from neptune_pro.diffusion import cosine_beta_schedule, SinusoidalTimeEmbedding
+from models.fno_latent_diffusion.diffusion import cosine_beta_schedule, SinusoidalTimeEmbedding
 
 
 class _ActionEpsNet(nn.Module):

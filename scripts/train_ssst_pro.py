@@ -14,11 +14,11 @@ import yaml
 from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
 from common import set_all_seeds, get_logger
 from data_pipeline.dataset import NeptuneProfileDataset
-from ssst_pro.ssst_model import SSSTProSurrogate
+from models.sparse_moe_transformer.ssst_model import SSSTProSurrogate
 
 
 def collate(batch):

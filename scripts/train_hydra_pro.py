@@ -16,16 +16,16 @@ import yaml
 from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
 from common import set_all_seeds, get_logger
 from data_pipeline.dataset import HydraWindowsDataset
-from hydra_marl_pro.agents.validator import ValidatorAgent
-from hydra_marl_pro.algorithms.iql import IQLCritic
-from hydra_marl_pro.algorithms.madt import MultiAgentDecisionTransformer
-from hydra_marl_pro.communication.gat import GATCommunication
-from hydra_marl_pro.critic.multi_agent_transformer import MultiAgentTransformerCritic
-from hydra_marl_pro.policies.diffusion_policy import DiffusionPolicy
+from models.diffusion_policy_marl.agents.validator import ValidatorAgent
+from models.diffusion_policy_marl.algorithms.iql import IQLCritic
+from models.diffusion_policy_marl.algorithms.madt import MultiAgentDecisionTransformer
+from models.diffusion_policy_marl.communication.gat import GATCommunication
+from models.diffusion_policy_marl.critic.multi_agent_transformer import MultiAgentTransformerCritic
+from models.diffusion_policy_marl.policies.diffusion_policy import DiffusionPolicy
 
 
 # 7 agents: detector, shape, geometry, smoothness, trend, asymmetry, validator

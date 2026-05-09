@@ -15,8 +15,8 @@ from typing import List
 import torch
 import torch.nn as nn
 
-from sarl_pro.feature_extractor import SARLProFeatureExtractor
-from sarl_pro.sac_pro import GaussianActor, TwinCritic
+from models.sac_pro.feature_extractor import SARLProFeatureExtractor
+from models.sac_pro.sac_pro import GaussianActor, TwinCritic
 
 
 class CrossAgentAttention(nn.Module):

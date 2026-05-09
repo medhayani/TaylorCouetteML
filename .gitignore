@@ -8,6 +8,7 @@ __pycache__/
 .venv/
 venv/
 env/
+!models/diffusion_policy_marl/env/
 
 # OS
 .DS_Store

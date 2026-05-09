@@ -14,11 +14,11 @@ import yaml
 from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
 from common import set_all_seeds, get_logger
 from data_pipeline.dataset import NeptuneProfileDataset
-from neptune_pro.trainer import NeptuneProSurrogate
+from models.fno_latent_diffusion.trainer import NeptuneProSurrogate
 
 
 def collate(batch):
