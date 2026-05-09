@@ -228,7 +228,8 @@ def main():
               branch_local_id=np.array([it["branch_local_id"] for it in te]),
               ctx_mean=train_ds.ctx_mean, ctx_std=train_ds.ctx_std)
 
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"[precision] device = {device}")
 
     print("\n>>> Training SIREN (kink-weighted)")
     siren = SIRENRegressor(ctx_dim=len(STATIC_FEATURES)).to(device)
