@@ -1,0 +1,52 @@
+{
+  "feature_names": [
+    "s_rel",
+    "y_pred",
+    "dy_pred",
+    "d2y_pred",
+    "abs_dy_pred",
+    "abs_d2y_pred",
+    "switch_prob",
+    "switch_focus",
+    "curv_focus"
+  ],
+  "static_feature_names": [
+    "log10E",
+    "branch_order_norm",
+    "width_k",
+    "width_asymmetry",
+    "rise_asymmetry",
+    "slope_left_local",
+    "slope_right_local",
+    "global_slope",
+    "curvature_at_min",
+    "roughness_rmse",
+    "normalized_arc_length",
+    "has_switch_left",
+    "has_switch_right",
+    "center_pred_s",
+    "center_true_s_filled",
+    "has_true_center",
+    "center_error_s",
+    "center_error_rel",
+    "baseline_mae",
+    "baseline_rmse",
+    "switch_prob_peak",
+    "curv_peak_abs",
+    "window_half_width"
+  ],
+  "window_points": 49,
+  "window_half_width": 0.16,
+  "n_total_windows": 720,
+  "n_windows_by_split": {
+    "train": 497,
+    "val": 116,
+    "test": 107
+  },
+  "notes": {
+    "grid_definition": "local_grid in [-1,1], absolute s = center_pred_s + window_half_width * local_grid",
+    "true_center_fallback": "max absolute curvature on Ta_true if not provided",
+    "pred_center_fallback": "max absolute curvature on Ta_d5 if not provided",
+    "canonical_source": "06_Canonical__Build_Canonical_Base\\02_outputs\\canonical_curve_table_norm_fixed.csv"
+  }
+}
