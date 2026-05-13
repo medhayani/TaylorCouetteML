@@ -84,6 +84,9 @@ def load_rl_v2_and_windows(device, root):
     yp = np.concatenate([ds_train.y_pred, ds_val.y_pred, ds_test.y_pred])
     yt = np.concatenate([ds_train.y_true, ds_val.y_true, ds_test.y_true])
     lg = np.concatenate([ds_train.local_grid, ds_val.local_grid, ds_test.local_grid])
+    centres = np.concatenate([ds_train.center_pred, ds_val.center_pred, ds_test.center_pred])
+    halves = np.concatenate([ds_train.window_half_width, ds_val.window_half_width,
+                                ds_test.window_half_width])
     Es = np.concatenate([ds_train.E, ds_val.E, ds_test.E])
     bids = np.concatenate([ds_train.branch_local_id, ds_val.branch_local_id,
                                 ds_test.branch_local_id])
@@ -132,6 +135,8 @@ def load_rl_v2_and_windows(device, root):
                 "y_pred": yp.astype(np.float32),
                 "y_true": yt.astype(np.float32),
                 "local_grid": lg.astype(np.float32),
+                "center_pred": centres.astype(np.float32),
+                "window_half_width": halves.astype(np.float32),
                 "E": Es, "branch_local_id": bids}
     return sarl_models, marl_models, rl_idx, arrays
 
@@ -161,8 +166,13 @@ def rl_v2_refine(sarl_models, marl_models, rl_idx, rl_arr,
             samples.append((y_pred + delta).squeeze(0).cpu().numpy())
     y_rl_norm = np.clip(np.median(np.stack(samples, axis=0), axis=0), -0.2, 1.2)
     Ta_rl = Ta_min + y_rl_norm * amp
-    s_grid = rl_arr["local_grid"][key]
-    k_phys = k_left + (s_grid + 1.0) * 0.5 * (k_right - k_left)
+    # Correct mapping (per rl_windows_schema_pro_v3.json):
+    # absolute s = center_pred + window_half_width * local_grid, local_grid in [-1, 1].
+    local_grid = rl_arr["local_grid"][key]
+    centre = float(rl_arr["center_pred"][key])
+    half = float(rl_arr["window_half_width"][key])
+    s_abs = centre + half * local_grid
+    k_phys = k_left + s_abs * (k_right - k_left)
     return k_phys, Ta_rl
 
 
