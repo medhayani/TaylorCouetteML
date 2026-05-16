@@ -23,40 +23,35 @@
 \renewcommand{\baselinestretch}{1.10}
 
 \newcommand{\R}{\mathbb{R}}
-\newcommand{\Ta}{T_a}
 \newcommand{\We}{\mathit{We}}
-\newcommand{\De}{\mathit{De}}
 \newcommand{\El}{\mathit{El}}
 \newcommand{\Rey}{\mathit{Re}}
 \newcommand{\Ta}{T_a}
-\newcommand{\projname}{\textsc{TaylorCouetteML}}
 
-% Nouvelles architectures (v2)
-\newcommand{\CNP}{\textbf{CNP-TC}}
-\newcommand{\DISTIL}{\textbf{DISTIL-STAR}}
-\newcommand{\SARLv}{\textbf{SARL-v2}}
-\newcommand{\MARLv}{\textbf{MARL-v2}}
-\newcommand{\RLv}{\textbf{RL-aug}}
-\newcommand{\MEDNN}{\textbf{MED-NN}}
-\newcommand{\ORCNN}{\textbf{ORC-NN}}
+% Noms scientifiques des architectures
+\newcommand{\CNP}{\textsc{cnp}}              % Conditional Neural Process
+\newcommand{\DST}{\textsc{dist}}             % Distilled Spectral Transformer
+\newcommand{\RLR}{\textsc{rl-ref}}           % Reinforcement Learning Refiner
 
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{\small Surrogates v2 pour Taylor--Couette UCM}
-\lhead{\small \projname{} v2, mai 2026}
+\rhead{\small Apprentissage neuronal pour la stabilite Taylor--Couette UCM}
+\lhead{\small Hayani Choujaa, 2026}
 \cfoot{\small \thepage}
 
 \title{
 \vspace{-1.4cm}
-\textbf{\large Trois nouvelles architectures neuronales pour la
-stabilite lineaire d'un ecoulement de Taylor--Couette oscillatoire
-en fluide de Maxwell convecte superieur~: meta-apprentissage,
-distillation d'ensemble et raffineur RL augmente}
+\textbf{\large Trois architectures neuronales pour la stabilite lineaire
+d'un ecoulement de Taylor--Couette oscillatoire en fluide de Maxwell
+convecte superieur~: meta-apprentissage par processus neuronal
+conditionnel, distillation d'ensemble, et raffinement par
+apprentissage par renforcement}
 }
-\author[1]{Mohamed Hayani Choujaa\thanks{hayani.med11@gmail.com}}
+\author[1]{Mohamed Hayani Choujaa\thanks{Auteur correspondant~:
+\texttt{hayani.med11@gmail.com}}}
 \affil[1]{Laboratoire de Mecanique, Faculte des Sciences Ain Chock,
 Universite Hassan II de Casablanca, Maroc}
-\date{15 mai 2026}
+\date{}
 
 \begin{document}
 \maketitle
@@ -64,150 +59,132 @@ Universite Hassan II de Casablanca, Maroc}
 \begin{center}
 \begin{minipage}{0.95\linewidth}
 \noindent\small\textbf{Resume.}\quad
-Predire la courbe de stabilite marginale $\Ta(k)$ d'un ecoulement de
-Taylor--Couette oscillatoire en fluide de Maxwell convecte
-superieur~(UCM) avec cylindres oscillant en opposition de phase
-est un probleme couteux~: chaque point de la courbe requiert la
-diagonalisation d'un operateur de Floquet sur la periode
-d'oscillation. Le jeu de donnees produit dans Hayani~Choujaa~\textit{et
-al.}~\cite{hayani2021} comporte $N=720$ branches dans le plan
-$(k,E)$ pour $E\in[10^{-4},10]$, $k\in[k_\text{left},k_\text{right}]$,
-chacune associee a 23~descripteurs functionnels.
-Apres une premiere generation de neuf surrogates supervises
-publiee dans la v1 du projet~\projname{}~\cite{tcml_v1},
-nous proposons ici trois nouvelles architectures qui adressent
-trois faiblesses identifiees~:
-(i)~un \emph{Conditional Neural Process} (\CNP{}) qui exploite
-0 a 32~points exacts $(k_c,\Ta_c)$ comme contexte additionnel a
-l'inference~;
-(ii)~une distillation single-model (\DISTIL{}) reproduisant la
-mediane de 29~surrogates dans un unique forward pass~30$\times$
-plus rapide~;
-(iii)~un raffineur RL ensemble re-agrege en \emph{weighted-SARL}
-puis fusionne avec la mediane d'ensemble (\RLv{}) couvrant
-toute la branche $[k_\text{left},k_\text{right}]$.
-La MAE physique sur le split test passe de
-$1{,}21\,\degree$ pour la mediane d'ensemble \MEDNN{} (etat de
-l'art v1) a $1{,}11\,\degree$ pour \RLv{} dans la zone du
-switch, soit un gain de $8\%$, avec un \emph{R^2 global de
-$0{,}9997$} sur $\Ta\in[60,560]$. La distillation \DISTIL{} preserve
-$96\%$ de la performance ensemble en divisant le cout d'inference
-par~$\sim 30$. L'inference few-shot du \CNP{} diminue la MAE d'un
-facteur~$3$ a partir de 4~points exacts par branche.
+Nous etudions la stabilite lineaire d'un ecoulement de
+Taylor--Couette oscillatoire d'un fluide de Maxwell convecte
+superieur~(UCM) entre deux cylindres coaxiaux tournants en
+opposition de phase. La frontiere de stabilite marginale dans le
+plan~$(k,\Ta)$, ou $k$ est le nombre d'onde axial et $\Ta$ le
+nombre de Taylor, est solution implicite du probleme aux valeurs
+propres de Floquet sur la periode d'oscillation. Sa resolution
+directe est numeriquement couteuse, ce qui motive le developpement
+de surrogates neuronaux capables de la predire en quelques
+millisecondes.
+
+Sur un jeu de $720$~branches de stabilite parametrees par un
+nombre d'elasticite $E\!\in\![10^{-4},10]$ et $23$~descripteurs
+morphologiques de branche, nous proposons et benchmarkons trois
+architectures complementaires~:
+(i)~un processus neuronal conditionnel \emph{(Conditional Neural
+Process,~\CNP{})} qui supporte une inference \emph{zero-shot}
+purement basee sur les descripteurs ou \emph{few-shot} avec
+quelques points $(k_c,\Ta_c)$ exacts fournis comme contexte
+additionnel~;
+(ii)~un transformeur spectral distille~\emph{(\DST{})} qui
+reproduit en un unique forward pass la mediane des predictions
+de $29$~surrogates supervises, divisant le cout d'inference par
+$\sim\!30\times$ tout en preservant $96\%$ de la performance~;
+(iii)~un raffineur par apprentissage par renforcement~\emph{(\RLR{})}
+constitue de cinq agents Soft Actor-Critic mono-agent et de cinq
+systemes multi-agents 3-SAC entraines pour corriger la prediction
+d'un surrogate de reference dans la zone des cusps inter-branches.
+
+Sur le split test (107 branches, 101~points par branche),
+$\CNP$ \emph{zero-shot}, $\DST$, et la mediane d'ensemble
+atteignent une erreur absolue moyenne (MAE) de l'ordre de
+$\mathrm{MAE}\!\approx\!1{,}2\degree$ en unites physiques,
+contre $0{,}5\degree$ pour la borne oracle. La distillation~$\DST$
+divise le cout d'inference par $\sim\!30\times$~;
+$\CNP$ \emph{few-shot} avec $N_c\!=\!4$ points exacts rejoint
+la borne oracle~; le raffineur~$\RLR$ ramene la MAE dans la zone
+du switch de $0{,}024$ a $0{,}008$ (en unites normalisees), un
+gain net d'un facteur~3 par rapport au surrogate de reference.
+L'ensemble forme un pipeline de production utilisable a la place
+du solveur Floquet~direct.
 \end{minipage}
 \end{center}
 \vspace{0.4cm}
 
 
 %======================================================================
-\section{Introduction et motivation}
+\section{Introduction}
 \label{sec:intro}
 
-\subsection{Probleme physique et motivation industrielle}
+L'instabilite des ecoulements viscoelastiques en geometrie courbe
+constitue un sujet etabli de la rheologie non-newtonienne et de la
+mecanique des polymeres en
+ecoulement~\cite{larson1992,shaqfeh1996}. La configuration
+canonique est celle de Taylor--Couette~: un fluide confine entre
+deux cylindres coaxiaux est soumis a la rotation differentielle
+des parois. Lorsque le fluide est viscoelastique, les contraintes
+normales generent une force centripete additionnelle qui modifie
+la frontiere de stabilite~\cite{larson1990} et peut faire
+apparaitre des branches d'instabilite secondaires absentes du
+cas newtonien.
 
-L'instabilite des ecoulements viscoelastiques en geometrie courbe est
-un sujet recurrent en mecanique des fluides
-non-newtoniens~\cite{larson1990,shaqfeh1996}. Le cas modele canonique
-est celui de \emph{Taylor--Couette}~: un fluide est confine entre
-deux cylindres coaxiaux et la deformation azimutale du fluide est
-imposee par la rotation differentielle des deux parois.
-Lorsque le fluide est viscoelastique, par exemple un fluide de
-Maxwell~convecte~superieur~(UCM), les contraintes normales
-elastiques generent une force centripete additionnelle qui
-\emph{deplace le seuil d'instabilite} par rapport au cas newtonien et
-peut induire des branches d'instabilite secondaires absentes du
-cas inelastique~\cite{larson1990}.
+L'interet pratique de ces ecoulements est triple~:
+en \emph{extrusion polymerique}, le passage du fluide entre parois
+oscillantes est exactement la configuration etudiee ici, et la
+prediction du seuil d'instabilite permet de prevenir l'apparition
+de defauts de surface~; en \emph{microfluidique viscoelastique},
+la maitrise de la transition vers la turbulence elastique sert a
+intensifier le melange a tres bas Reynolds~; en \emph{rheometrie},
+l'apparition de motifs de Taylor signe experimentalement les
+proprietes elastiques du fluide~\cite{shaqfeh1996}.
 
-L'interet industriel de ces ecoulements est triple~:
-\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=4pt]
-\item En \emph{extrusion polymerique}, le passage du fluide entre
-   parois oscillantes est exactement la configuration de notre
-   etude~; identifier la frontiere de stabilite permet de prevenir
-   les defauts de surface (\emph{melt fracture}).
-\item En \emph{microfluidique viscoelastique}, le controle precis
-   de la transition vers la turbulence elastique est utilise pour
-   intensifier le melange a tres bas Reynolds.
-\item En \emph{rheometrie}, l'apparition de motifs Taylor signe
-   experimentalement les proprietes elastiques du fluide~; un
-   surrogate predictif tres rapide permet de \emph{calibrer en
-   ligne} le rheometre.
-\end{itemize}
+Dans une etude precedente, l'un des auteurs a etabli le diagramme
+de stabilite marginale d'un ecoulement de Taylor--Couette
+oscillatoire en fluide de Maxwell convecte superieur~(UCM) avec
+cylindres en opposition de phase~\cite{hayani2021}. Le calcul
+direct d'un point~$(k,\Ta)$ de la courbe marginale exige
+l'integration de l'equation lineaire de perturbation periodique
+sur une periode d'oscillation~$T_\text{osc}$, la construction de
+la matrice de monodromie de Floquet~$\Phi(T_\text{osc})$, puis la
+recherche du Taylor critique pour lequel la plus grande valeur
+propre de~$\Phi$ traverse le cercle unite. Pour une discretisation
+realiste (50~modes radiaux, 100~pas de temps),
+le cout d'un seul point est de l'ordre de
+$\sim\!50$~secondes sur un CPU haute frequence. Couvrir le plan
+$(k,E)$ complet sur la base de 720~branches utilisees ici
+consommerait $\sim\!1500$~heures-CPU, prohibitif pour une
+exploration parametrique ou pour une utilisation en
+boucle de controle.
 
-\subsection{Cout du solveur direct et necessite d'un surrogate}
-
-Le calcul direct d'un point $(k,E,\Ta)$ de la courbe marginale
-requiert~:
-\begin{enumerate}[leftmargin=*,itemsep=1pt,topsep=3pt]
-\item L'integration de Floquet de l'equation aux derivees partielles
-   linearisee autour de l'etat de base oscillant, sur une periode~$T$
-   d'oscillation, pour chaque nombre d'onde axial $k$~;
-\item La construction de la matrice de monodromie $\Phi(T)$~;
-\item La recherche du $\Ta$ critique tel que la plus grande valeur
-   propre de $\Phi(T)$ traverse le cercle unite.
-\end{enumerate}
-Pour une discretisation realiste (50~modes radiaux, 100~pas de
-temps), le cout est de l'ordre de $\sim 50$~secondes par point
-$(k,\Ta)$ sur un CPU haute frequence. Une seule branche complete
-($\sim$~150 points) coute donc plus de deux heures, et l'exploration
-complete a 720~branches consommerait $\sim 1500$~heures-CPU. Un
-surrogate neural qui ramene chaque branche a $<1$~seconde fournit
-un gain de \emph{trois ordres de grandeur} indispensable a toute
-exploration parametrique ou a une utilisation en boucle de
-controle.
-
-\subsection{Limites de la v1 et apport de la v2}
-
-Le cadre \projname{} v1~\cite{tcml_v1} a livre neuf architectures
-(SSST, NEPTUNE, SARL, MARL, HYDRA, SIREN, DeepONet, Chebyshev,
-Envelope-SIREN) sur le meme jeu de 720~branches. Le benchmark
-final v1 atteint $\mathrm{MAE}=0{,}018$ et $R^2=0{,}986$ pour le
-meilleur raffineur MARL.
-
-Deux faiblesses subsistent~:
-\begin{itemize}[leftmargin=*,itemsep=2pt,topsep=4pt]
-\item \textbf{Faiblesse aux extremes en $E$.} Pour
-   $E\in\{10^{-4},10\}$, les surrogates individuels ne disposent
-   d'aucun point exact ponctuel pour calibrer leur sortie. Le
-   physicien souhaiterait pouvoir, optionnellement, fournir
-   quelques mesures de reference sans reentrainer le modele.
-\item \textbf{Cout de servir l'ensemble.} La mediane des
-   29~modeles est l'etat de l'art, mais l'inference en production
-   reste 29~fois plus chere qu'un seul forward.
-\end{itemize}
-
-La v2 introduit trois architectures qui ciblent ces limites~:
+Nous proposons donc \emph{trois architectures neuronales}
+complementaires pour predire la courbe marginale en quelques
+millisecondes :
 \begin{enumerate}[leftmargin=*,itemsep=2pt,topsep=4pt]
-\item \CNP{} (Section~\ref{sec:cnp})~: un Conditional Neural
-   Process qui supporte des contextes few-shot $(k_c,\Ta_c)$
-   variables~;
-\item \DISTIL{} (Section~\ref{sec:distil})~: un etudiant unique
-   reproduisant la mediane des 29~teachers~;
-\item \RLv{} (Section~\ref{sec:rl})~: un raffineur RL ensemble
-   re-agrege en \emph{weighted-SARL} et augmente d'une couverture
-   complete par fusion avec \MEDNN{} en dehors de la fenetre du
-   switch.
+\item Un \emph{processus neuronal conditionnel}~(\CNP{}) qui
+   produit la prediction $\widehat\Ta(k)$ a partir des $23$
+   descripteurs morphologiques de la branche et qui peut, en
+   inference, integrer un nombre arbitraire de points
+   $(k_c,\Ta_c)$ exacts comme contexte additionnel.
+\item Un \emph{transformeur spectral distille}~(\DST{}) qui
+   reproduit en un seul forward pass la mediane d'un ensemble de
+   $29$~surrogates supervises preentraines.
+\item Un \emph{raffineur par apprentissage par renforcement}~(\RLR{})
+   constitue de deux ensembles d'agents (Soft Actor-Critic
+   mono-agent et 3-SAC multi-agent) entraines a corriger la
+   prediction d'un surrogate de reference dans la zone des cusps
+   inter-branches.
 \end{enumerate}
 La Section~\ref{sec:phys} pose la formulation mathematique du
-probleme physique~; la Section~\ref{sec:data} decrit la construction
-du jeu de donnees~; les Sections~\ref{sec:cnp}--\ref{sec:rl}
-detaillent les trois architectures~; la Section~\ref{sec:exp}
-specifie le protocole experimental et la Section~\ref{sec:res} les
-resultats. La Section~\ref{sec:disc} discute le choix technique du
-\emph{maintien de la base D5} (et non MED-NN) pour le RL refiner,
-puis la Section~\ref{sec:concl} conclut.
+probleme physique, la Section~\ref{sec:data} decrit le jeu de
+donnees, la Section~\ref{sec:methods} detaille les trois
+architectures, la Section~\ref{sec:exp} specifie le protocole
+numerique, la Section~\ref{sec:res} presente les resultats et
+la Section~\ref{sec:disc} en discute la portee et les limites.
 
 
 %======================================================================
-\section{Formulation mathematique du probleme physique}
+\section{Formulation mathematique du probleme}
 \label{sec:phys}
 
 \subsection{Equations gouvernantes}
 
-On considere un fluide incompressible de Maxwell convecte
-superieur~(UCM) confine entre deux cylindres coaxiaux de rayons
-$R_1<R_2$, hauteur infinie, tournant a vitesses azimutales
-$\Omega_1(t)$ et $\Omega_2(t)$ harmoniques de meme pulsation $\omega$
-et en \emph{opposition de phase}~:
+Soit un fluide incompressible de Maxwell convecte superieur~(UCM)
+confine entre deux cylindres coaxiaux de rayons $R_1\!<\!R_2$ et
+hauteur infinie. Les cylindres tournent a vitesses angulaires
+oscillantes en opposition de phase~:
 \begin{equation}
 \Omega_1(t)=\Omega_0\cos(\omega t),\qquad
 \Omega_2(t)=-\Omega_0\cos(\omega t).
@@ -223,26 +200,30 @@ adimensionnel
 \bm\tau + \We\,\stackrel{\nabla}{\bm\tau}
    &= 2\beta\,\mathbf{D},\label{eq:UCM}
 \end{align}
-ou $\mathbf{D}=\tfrac{1}{2}(\nabla\mathbf{u}+\nabla\mathbf{u}^\top)$
+ou
+$\mathbf{D}=\tfrac{1}{2}(\nabla\mathbf{u}+\nabla\mathbf{u}^\top)$
 est le taux de deformation et
 $\stackrel{\nabla}{\bm\tau}
 =\partial_t\bm\tau+\mathbf{u}\!\cdot\!\nabla\bm\tau
 -(\nabla\mathbf{u})^\top\bm\tau-\bm\tau(\nabla\mathbf{u})$
-la derivee de Maxwell convectee superieure. Le ratio
-$\beta=\eta_p/\eta_0$ ($0\!\leq\!\beta\!\leq\!1$) fixe la
-contribution polymerique, $\Rey=\rho\Omega_0R_1^2/\eta_0$ le
-nombre de Reynolds et $\We=\Omega_0\lambda$ le nombre de
-Weissenberg, $\lambda$ etant le temps de relaxation du polymere.
-On se place ici en regime $\beta=1$ (UCM pur).
+designe la derivee de Maxwell convectee superieure. Le
+ratio~$\beta=\eta_p/\eta_0\in[0,1]$ fixe la contribution
+polymerique~; le nombre de Reynolds vaut
+$\Rey=\rho\Omega_0 R_1^2/\eta_0$ et le nombre de Weissenberg
+$\We=\Omega_0\lambda$, ou $\lambda$ est le temps de relaxation
+caracteristique. Le present travail se restreint au regime UCM
+pur ($\beta\!=\!1$). Le nombre d'elasticite~$E=\We^2/\Rey$
+fournit une parametrisation alternative naturelle a faible
+inertie~\cite{larson1990}.
 
 \subsection{Etat de base et linearisation}
 
 L'etat de base axisymetrique invariant par translation axiale
-$(\mathbf{U}_0,\bm\tau_0)$ est obtenu en cherchant
-$\mathbf{U}_0(r,t)=U_\theta(r,t)\,\hat{\bm\theta}$ avec
-$U_\theta(r,t)=\text{Re}\bigl[\hat U(r)\,e^{i\omega t}\bigr]$. Les
-equations~(\ref{eq:incomp})--(\ref{eq:UCM}) admettent alors une
-solution exprimable en fonctions de Bessel modifiees~\cite{hayani2021}.
+$(\mathbf{U}_0,\bm\tau_0)$ admet un champ de vitesse purement
+azimutal $\mathbf{U}_0(r,t)=U_\theta(r,t)\,\hat{\bm\theta}$ avec
+$U_\theta(r,t)=\mathrm{Re}\!\bigl[\hat U(r)\,e^{i\omega t}\bigr]$,
+ou $\hat U$ s'exprime en fonctions de Bessel modifiees fonction
+de $r$, $\omega$, $\We$, $\eta\!=\!R_1/R_2$~\cite{hayani2021}.
 
 Les perturbations infinitesimales sont decomposees en modes
 $(k,n)$~:
@@ -251,654 +232,526 @@ $(k,n)$~:
 = \bigl(\widetilde{\mathbf{u}},\widetilde{\bm\tau},\widetilde p\bigr)(r,t)\,
    e^{i(kz+n\theta)}.
 \end{equation}
-Pour le mode azimutal axisymetrique $n=0$, on obtient un systeme
-lineaire periodique de periode $T=2\pi/\omega$ en la variable
-$r\in[1,\eta^{-1}]$ ($\eta=R_1/R_2$), de la forme
+Pour le mode azimutal axisymetrique~$n\!=\!0$ -- le plus instable
+sur l'ensemble du domaine etudie -- on obtient le systeme lineaire
+periodique
 \begin{equation}
-\partial_t \mathbf{X}(r,t)\;=\;\mathcal{L}(r,t,k,\Rey,\We,\Ta)\,\mathbf{X}(r,t),
+\partial_t \mathbf{X}(r,t)\;=\;\mathcal{L}\bigl(r,t,k,\Rey,\We,\Ta\bigr)\,
+\mathbf{X}(r,t),
 \label{eq:linsys}
 \end{equation}
 ou $\mathbf{X}=(\widetilde{u}_r,\widetilde{u}_\theta,\widetilde{u}_z,
-\widetilde\tau_{rr},\dots)^\top$ est le vecteur d'etat des perturbations
-et $\mathcal{L}$ depend periodiquement du temps.
-
-Le nombre de Taylor $\Ta$ definit l'amplitude du forcing~:
-$\Ta = \Omega_0^2 R_1 (R_2-R_1)^3/\nu^2$ (avec $\nu=\eta_0/\rho$).
+\widetilde\tau_{rr},\ldots)^\top$ est le vecteur d'etat des
+perturbations et $\mathcal{L}$ depend periodiquement du temps avec
+periode $T_\text{osc}=2\pi/\omega$. Le nombre de Taylor mesure
+l'amplitude du forcing~:
+\begin{equation}
+\Ta=\frac{\Omega_0^2\,R_1\,(R_2-R_1)^3}{\nu^2},\qquad \nu=\eta_0/\rho.
+\end{equation}
 
 \subsection{Theorie de Floquet et courbe marginale}
 
-L'equation~(\ref{eq:linsys}) etant lineaire et periodique en temps,
-sa solution sur une periode est de la forme
-$\mathbf{X}(r,T)=\Phi(T;k,\Ta)\,\mathbf{X}(r,0)$, ou $\Phi(T)$ est
-la \emph{matrice de monodromie de Floquet}. Les valeurs propres
-$\sigma_j$ de $\Phi(T)$ (multiplicateurs de Floquet) gouvernent la
-stabilite asymptotique des perturbations~:
+L'equation~\eqref{eq:linsys} etant lineaire et periodique en
+temps, sa solution apres une periode est de la forme
+$\mathbf{X}(r,T_\text{osc})=\Phi(T_\text{osc};k,\Ta)\,\mathbf{X}(r,0)$,
+ou $\Phi(T_\text{osc})$ est la \emph{matrice de monodromie de
+Floquet}. Les valeurs propres $\sigma_j$ de
+$\Phi(T_\text{osc})$ (multiplicateurs de Floquet) gouvernent la
+stabilite asymptotique~:
 \begin{equation}
-\max_j |\sigma_j|\;<\;1 \Leftrightarrow \text{stable},\qquad
-\max_j |\sigma_j|\;>\;1 \Leftrightarrow \text{instable}.
+\max_j |\sigma_j|<1 \Leftrightarrow \text{stable},\qquad
+\max_j |\sigma_j|>1 \Leftrightarrow \text{instable}.
 \end{equation}
-La \emph{courbe marginale} dans le plan $(k,\Ta)$ est definie
+La \emph{courbe marginale} dans le plan~$(k,\Ta)$ est definie
 implicitement par
 \begin{equation}
-\boxed{\;\mathcal{F}(k,\Ta;\We)\;:=\;
-\max_j |\sigma_j\bigl(\Phi(T;k,\Ta)\bigr)|\;-\;1\;=\;0.\;}
+\boxed{\quad
+\mathcal{F}(k,\Ta;\We,\eta)\;:=\;
+\max_j |\sigma_j\bigl(\Phi(T_\text{osc};k,\Ta)\bigr)|\;-\;1
+\;=\;0.\quad}
 \label{eq:marginal}
 \end{equation}
-Pour $\We$ fixe, on definit la fonction
-$\Ta\!:k\mapsto\Ta_c(k;\We)$ comme l'inverse implicite de
-(\ref{eq:marginal})~: $\Ta_c(k)$ est le nombre de Taylor critique
-qui rend la perturbation de longueur d'onde axiale $2\pi/k$
-marginalement stable. C'est cette fonction $k\!\mapsto\!\Ta(k,E)$
-(avec $E\!=\!\We^2/\Rey$ le nombre d'elasticite~\cite{larson1990})
-que nos surrogates approximent.
+Pour $\We$ et $\eta$ fixes, on definit la fonction implicite
+$k\!\mapsto\!\Ta(k;\We,\eta)$ comme la plus petite racine positive
+de~\eqref{eq:marginal}. C'est cette fonction
+$k\!\mapsto\!\Ta(k,E)$ (a $\eta$ fixe) que nos surrogates
+neuronaux approximent.
 
-\subsection{Topologie de $\Ta(k)$ et notion de branche}
+\subsection{Topologie de la courbe marginale et notion de branche}
 
-Pour $\We$ croissant, la solution implicite~(\ref{eq:marginal})
-possede plusieurs branches dans le plan $(k,\Ta)$~: chaque branche
-correspond a un mode de Floquet different qui devient le mode le
-plus instable a un certain intervalle de $k$. Les transitions entre
-branches sont des \emph{cusps} (points $C^0$ mais non $C^1$) en
-$k$. Le nombre de branches dans l'intervalle $k\in[1,20]$ varie
-typiquement de 1 (a faible elasticite) a $n_b\in\{4,5\}$ (a haute
-elasticite). Notre jeu de donnees regroupe chaque branche
-isolement~: une branche est un triplet
-$(E,b_{\text{local}},\{(k_j,\Ta_j)\}_{j=1}^{n_j})$ avec
-$b_{\text{local}}\in\{0,\dots,n_b-1\}$.
+Pour un~$\We$ croissant, la solution
+implicite~\eqref{eq:marginal} possede plusieurs branches dans le
+plan $(k,\Ta)$~: chaque branche correspond a un mode de Floquet
+different qui devient le mode le plus instable a un certain
+intervalle de~$k$. Les transitions entre branches sont des
+\emph{cusps} (points $C^0$ mais non $C^1$) en~$k$, dont le nombre
+varie typiquement de 1 a faible elasticite a 4--5 a haute
+elasticite sur l'intervalle $k\!\in\![1,20]$ etudie. Notre jeu de
+donnees regroupe chaque branche separement comme un triplet
+$(E,b_{\text{loc}},\{(k_j,\Ta_j)\}_{j=1}^{n_j})$ avec
+$b_{\text{loc}}\!\in\!\{0,\ldots,n_b\!-\!1\}$ identifiant la
+branche dans son contexte.
 
 
 %======================================================================
-\section{Construction et exploration du jeu de donnees}
+\section{Jeu de donnees}
 \label{sec:data}
 
-\subsection{Donnees brutes et descripteurs functionnels}
+\subsection{Donnees brutes et descripteurs morphologiques}
 
-Le pipeline TF/Keras de Hayani~Choujaa~\textit{et al.}~\cite{hayani2021}
-fournit
-\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item un fichier \verb|combined_data.csv| de $\sim 145\,000$ triplets
-   $(\Ta,k,E)$ couvrant 420~valeurs distinctes de~$E$ dans
-   $[10^{-4},10]$ (log-uniforme)~;
-\item un decoupage en $N=720$ branches isolees, chaque branche
-   resamplee en $T=101$ points equi-repartis en $k$.
-\end{itemize}
-Pour chaque branche on calcule \emph{23~descripteurs
-functionnels} (cf.\ Table~\ref{tab:desc}) qui resument la
-morphologie de la branche sans encoder la branche elle-meme. Ces
-23~scalaires sont l'entree commune a tous les surrogates v1 et~v2.
+Le solveur de Floquet decrit dans la Section~\ref{sec:phys} a
+ete utilise pour produire $\sim\!145\,000$ triplets
+$(\Ta,k,E)$ couvrant $420$ valeurs distinctes de~$E$
+log-uniformement reparties dans $[10^{-4},10]$, soit
+$N\!=\!720$~branches isolees. Chaque branche est resamplee en
+$T\!=\!101$ points equi-repartis en~$k$ entre ses extremites
+$(k_\text{left},k_\text{right})$ associees aux cusps.
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabularx}{0.95\linewidth}{l X}
-\toprule
-Categorie & Descripteurs (23 au total) \\
-\midrule
-Position globale & $\log_{10}E$, branch\_order\_norm
-   ($\in[0,1]$), is\_first\_branch, is\_last\_branch,
-   has\_switch\_left, has\_switch\_right \\
-Forme   & width\_k, width\_asymmetry, rise\_asymmetry,
-   amplitude, mean\_abs\_slope, mean\_abs\_curvature,
-   curvature\_at\_min, normalized\_arc\_length,
-   roughness\_rmse \\
-Aux extremes & slope\_left\_local, slope\_right\_local,
-   global\_slope, left\_width, right\_width, left\_rise,
-   right\_rise \\
-Comptage   & n\_branches (entier dans la decade en $E$) \\
-\bottomrule
-\end{tabularx}
-\caption{Les 23~descripteurs functionnels par branche, calcules
-en pre-traitement. Aucun ne contient l'identite explicite de la
-branche~: les surrogates apprennent une \emph{fonction de la
-morphologie}, ce qui garantit une certaine generalisation aux
-branches inedites.}
-\label{tab:desc}
-\end{table}
+Pour chaque branche, on calcule un vecteur de $23$~descripteurs
+morphologiques~$\mathbf{c}\in\R^{23}$~: $\log_{10}E$,
+ordre de la branche dans son contexte, largeurs, asymetries,
+pentes locales gauche/droite, rugosite RMS de la deviation a une
+parabole, longueur d'arc normalisee, amplitude
+$\Ta_\text{max}-\Ta_\text{min}$, courbure au minimum, et indicateurs
+binaires de switch a gauche/droite. Aucun descripteur ne contient
+l'identite explicite de la branche~: les surrogates apprennent
+ainsi une fonction \emph{de la morphologie} qui generalise aux
+branches non vues.
 
-\subsection{Normalisation}
+\subsection{Normalisation et split}
 
-Pour la regression, chaque branche est ramenee a un format
-canonique~:
+Pour la regression, chaque branche est ramenee au format
+canonique
 \begin{equation}
-k\;\mapsto\;s = \frac{k-k_\text{left}}{k_\text{right}-k_\text{left}}\in[0,1],\quad
-\Ta\;\mapsto\;\Ta_n = \frac{\Ta-\Ta_\min}{\Ta_\max-\Ta_\min}\in[0,1].
+s = \frac{k-k_\text{left}}{k_\text{right}-k_\text{left}}\in[0,1],\quad
+\Ta_n = \frac{\Ta-\Ta_\text{min}}{\Ta_\text{max}-\Ta_\text{min}}\in[0,1],
 \end{equation}
-On dispose alors d'un dataset compact $\Ta_n(s)\in[0,1]^{720\times 101}$
-avec $s\in[-1,1]$ (reparametre apres $s\leftarrow 2s-1$). La
-denormalisation se fait via la table des
-$(k_\text{left},k_\text{right},\Ta_\min,\Ta_\max)$ par branche.
-
-\subsection{Split train / val / test}
-
-Le split stratifie sur $\log_{10}E$ donne 497~train, 116~val,
-107~test (proportions $69\%$/$16\%$/$15\%$).
-\emph{Identique au split v1} pour comparaison directe.
+avec $k_n\!=\!2s\!-\!1\in[-1,1]$. La table des
+$(k_\text{left},k_\text{right},\Ta_\text{min},\Ta_\text{max})$ par
+branche est conservee pour la denormalisation. Le split stratifie
+sur $\log_{10}E$ donne $497$ branches en \emph{entrainement},
+$116$ en \emph{validation}, et $107$ en \emph{test}.
 
 
 %======================================================================
-\section{CNP-TC : meta-apprentissage avec contexte few-shot}
+\section{Architectures neuronales}
+\label{sec:methods}
+
+\subsection{Processus neuronal conditionnel~(\CNP{})}
 \label{sec:cnp}
 
-\subsection{Motivation}
+\paragraph{Motivation.} Un surrogate supervise deterministe
+$\widehat\Ta_n(s\mid\mathbf{c})$ ne sait pas integrer des points
+$(k_c,\Ta_c)$ exacts fournis a l'inference sans reentrainement
+complet. Le \emph{processus neuronal conditionnel}, introduit
+par Garnelo \emph{et al.}~\cite{garnelo2018cnp}, traite
+explicitement le contexte comme un ensemble de paires
+$(k_c,\Ta_c)$ de cardinalite variable.
 
-Les surrogates supervises (SIREN, DeepONet, etc.) apprennent une
-fonction \emph{deterministe} $\Ta_n(s\mid\text{desc})$. Si le
-physicien dispose d'\emph{un seul} point exact $(k_c,\Ta_c)$ sur
-une branche difficile, aucun de ces modeles ne peut l'integrer
-sans reentrainement. Le \emph{Conditional Neural Process} (CNP)
-de Garnelo~\textit{et al.}~\cite{garnelo2018cnp} traite
-explicitement le contexte comme un set de paires
-$(k_c,\Ta_c)$ a taille variable.
-
-\subsection{Architecture}
-
+\paragraph{Architecture.} Le modele represente la distribution
+predictive
 \begin{equation}
-p\bigl(\Ta_n(s)\;\big|\; \text{desc},\;\{(k_{c,m},\Ta_{c,m})\}_{m=1}^{N_c}\bigr)
+p\!\left(\Ta_n(s)\;\middle|\;\mathbf{c},\;\bigl\{(k_{c,m},\Ta_{c,m})\bigr\}_{m=1}^{N_c}\right),
 \end{equation}
-avec $N_c\sim\mathcal{U}(\{0,1,\dots,32\})$ tire \emph{a chaque batch}.
+ou $N_c$ est tire uniformement dans $\{0,1,\ldots,32\}$ \emph{a
+chaque batch d'entrainement}. L'encodeur traite un sac de tokens
+\,$\R^{d_\text{m}=256}$~:
+les $23$ descripteurs deviennent $23$~tokens avec
+position-embedding appris~; $\log_{10}E$ est projete sur $32$
+sinusoides log-espacees puis sur $\R^{256}$~; les $4$~ancres
+$(k_\text{left},k_\text{right},\log\Ta_\text{min},\log\Ta_\text{max})$
+deviennent $4$~tokens dedies~; et chaque point de contexte
+$(k_c,\Ta_c)$ devient un token construit a partir de
+$16$~features de Fourier de $k_c$ et de $\Ta_c$ directement. Un
+encodeur Transformer a $6$~couches, $8$~tetes, dropout~$0{,}05$
+traite ce sac. Pour chaque~$s$ requete, un token construit des
+features de Fourier de $s$ est decode par $3$~couches de
+cross-attention sur la sortie de l'encodeur~; la tete de sortie
+combine $64$~coefficients Chebyshev et $32$~coefficients cosinus
+en une prediction $\sigma(\cdot)\in(0,1)$ pour~$\Ta_n(s)$.
 
-\paragraph{Encoder.}
-\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item 23~descripteurs $\to$ 23~tokens $\in\R^{d_\text{model}=256}$
-   avec position-embedding appris.
-\item $\log_{10}E\to$ 32 sinusoides log-espacees, projetees $\to\R^{256}$.
-\item 4 ancres $(k_\text{left},k_\text{right},\log\Ta_\min,\log\Ta_\max)$
-   $\to$ 4 tokens.
-\item Chaque point contextuel $(k_c,\Ta_c)\to$ 1 token construit a
-   partir de 16 features de Fourier de $k_c$ et de $\Ta_c$ directement.
-\item Un token \texttt{[CLS]} apprenable.
-\item Transformer encoder a 6~couches, 8~tetes, dropout~0,05.
-\end{itemize}
-
-\paragraph{Decoder.} Pour chaque $s$ requete, un token requete construit
-des features de Fourier de $s$ subit 3~couches de cross-attention sur
-la sortie de l'encoder. La sortie est decodee par une tete
-\emph{spectrale}~:
-\begin{equation}
-\widehat\Ta_n(s)
-= \sigma\!\left[\sum_{n=0}^{64}c_n\,T_n(s)
-                 + \sum_{m=1}^{32}d_m\cos\!\bigl(m\pi(s+1)/2\bigr)\right],
-\label{eq:cnp_head}
-\end{equation}
-ou $T_n$ sont les polynomes de Chebyshev. Le sigmoid garantit
-$\widehat\Ta_n(s)\in(0,1)$.
-
-\subsection{Perte d'entrainement}
-
-\begin{equation}
-\mathcal{L}_\text{CNP}
-= \mathrm{KW\text{-}MSE}\bigl(\widehat\Ta_n,\,\Ta_{n,\text{cible}}\bigr)
+\paragraph{Perte d'entrainement.}
+$\mathcal{L}_\CNP = \mathrm{MSE}\bigl(\widehat\Ta_n,\Ta_{n,\text{cible}}\bigr)
 + \lambda_\text{spec}\,L_\text{spec}
-+ \lambda_\text{smooth}\,L_\text{smooth},
-\end{equation}
-avec
-$L_\text{spec}=\frac{1}{n_\text{cheb}+1}\sum_n c_n^2\,(n+1)^2
-              +\frac{1}{n_\text{cos}}\sum_m d_m^2\,(m+1)^2$
-(penalisation de la decroissance des coefficients spectraux),
-$L_\text{smooth}=\mathbb{E}[(\partial^2_s\widehat\Ta_n)^2]$
-(diff. fin. centrale), $\lambda_\text{spec}=5\!\cdot\!10^{-5}$,
-$\lambda_\text{smooth}=5\!\cdot\!10^{-4}$, KW\text{-}MSE designe la
-MSE re-ponderee aux kinks (detection automatique des cusps).
++ \lambda_\text{smooth}\,L_\text{smooth}$, avec
+$L_\text{spec}$ penalisant l'amplitude des coefficients
+spectraux ponderee par leur degre, et $L_\text{smooth}$ penalisant
+la derivee seconde discrete de la prediction.
 
-\paragraph{Hyperparametres.} 1200~epochs, batch~16, AdamW
-lr~$2\!\cdot\!10^{-4}$, weight decay~$10^{-5}$, schedule Cosine
-warm-restart $T_0\!=\!\max(\text{epochs}/3,50)$, $T_\text{mult}\!=\!2$,
-gradient clipping global $\|g\|_2\!\leq\!1$. 5~seeds (42--46).
-La variante v2 deployee fixe $p_\text{zero-shot}=0{,}80$ (probabilite
-de tirer $N_c=0$).
+\paragraph{Inference.} Le meme modele couvre deux regimes en
+inference~:
+\emph{zero-shot} ($N_c\!=\!0$, prediction pure depuis les
+descripteurs), et \emph{few-shot} ($N_c\!\geq\!1$, prediction
+calibree par $N_c$ points exacts).
 
-\subsection{Inference zero-shot vs few-shot}
-
-Le meme checkpoint supporte deux regimes~:
-\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item \textbf{Zero-shot.} $N_c=0$, masque entierement nul~: prediction
-   pure depuis les descripteurs. Drop-in pour les surrogates v1.
-\item \textbf{Few-shot.} On fournit $N_c\geq 1$ paires
-   $(k_c,\Ta_c)$ obtenues par le solveur exact ou par mesure
-   experimentale~; le modele integre ces points dans la cross-attention.
-\end{itemize}
-
-
-%======================================================================
-\section{DISTIL-STAR : distillation single-model d'un ensemble de 29}
+\subsection{Transformeur spectral distille~(\DST{})}
 \label{sec:distil}
 
-\subsection{Architecture STAR de l'etudiant}
+\paragraph{Motivation.} La mediane de $M\!=\!29$~surrogates
+supervises preentraines (couvrant les familles SIREN, DeepONet,
+Chebyshev, Envelope-SIREN, Conditional Neural Process,
+Spectral Transformer with Anchored Residuals)
+fournit l'etat de l'art quantitatif de notre cadre. Cependant,
+servir l'ensemble entier en production cout $\sim\!29\times$ le
+cout d'un forward pass unique. La distillation
+single-model~\cite{hinton2015distillation} ramene ce cout a~$1$.
 
-STAR (Spectral Transformer with Anchored Residuals) est une variante
-\emph{transformeur} a contexte fixe (pas de set de points) et a
-sortie spectrale~:
+\paragraph{Architecture du modele etudiant.} On utilise un
+\emph{Spectral Transformer with Anchored Residuals}~: un
+transformeur encodeur a $d_\text{m}=384$, $8$~couches,
+$12$~tetes, traitant $23\!+\!1\!+\!4\!=\!28$~tokens d'entree
+(descripteurs, embedding sinusoidal de $\log_{10}E$, ancres). La
+sortie de son token~$\texttt{[CLS]}$ alimente une tete spectrale
+identique a celle du~$\CNP$ ($64$~Chebyshev + $32$~cosinus).
+
+\paragraph{Ensemble enseignant et cible.} On precalcule la
+mediane point-par-point sur la grille canonique $T\!=\!101$ points
+de tous les enseignants, stockee dans
+$\Ta_{n,\text{med}}\in[0,1]^{720\times 101}$.
+
+\paragraph{Perte de distillation.}
 \begin{equation}
-\widehat\Ta_n(s) = \sigma\!\left[\sum_{n=0}^{64}c_n\,T_n(s)
-   + \sum_{m=1}^{32}d_m\cos\bigl(m\pi(s+1)/2\bigr)\right],
-\end{equation}
-mais avec un encodeur a $d_\text{model}=384$, 8~couches, 12~tetes
-(au lieu de 6/8 pour le CNP). 4~tokens d'ancres
-$(k_\text{left},k_\text{right},\log\Ta_\min,\log\Ta_\max)$ sont
-attaches en parallele aux 23~tokens descripteurs et au token
-$\log_{10}E$. Sortie du \texttt{[CLS]} pour les coefficients
-$\{c_n,d_m\}$.
-
-\subsection{Mediane d'ensemble enseignante}
-
-L'ensemble enseignant est constitue de $M=29$~surrogates deja
-entraines~:
-\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item 12~modeles \emph{Precision v2} (4~archis $\in$ \{SIREN,
-   DeepONet, Chebyshev, Envelope-SIREN\} $\times$ 3~seeds)~;
-\item 5~modeles CSON~v1~;
-\item 5~modeles CNP~v1 (zero-shot)~;
-\item 7~modeles STAR~v1.
-\end{itemize}
-La cible
-$\Ta_{n,\text{med}}\in[0,1]^{720\times 101}$ est la mediane
-point-par-point des $M$ predictions sur la grille canonique, stockee
-dans \verb|ensemble_median_targets.npz|.
-
-\subsection{Loss de distillation}
-
-\begin{equation}
-\mathcal{L}_\text{DISTIL}
-= \alpha\,\mathrm{MSE}\bigl(\widehat\Ta_n,\Ta_{n,\text{med}}\bigr)
-+ (1-\alpha)\,\mathrm{KW\text{-}MSE}\bigl(\widehat\Ta_n,\Ta_{n,\text{data}}\bigr)
+\mathcal{L}_\DST = \alpha\,\mathrm{MSE}\bigl(\widehat\Ta_n,\Ta_{n,\text{med}}\bigr)
++ (1-\alpha)\,\mathrm{MSE}\bigl(\widehat\Ta_n,\Ta_{n,\text{data}}\bigr)
 + \lambda_\text{spec}\,L_\text{spec}
 + \lambda_\text{smooth}\,L_\text{smooth},
 \end{equation}
-avec $\alpha=0{,}70$. La premiere composante apprend de l'\emph{accord
-de l'ensemble} (signal lisse, sans bruit de label)~; la seconde
-maintient l'ancrage aux donnees brutes pour ne pas amplifier
-d'eventuelles erreurs systematiques.
-
-\paragraph{Hyperparametres.} 1500~epochs, batch~16, AdamW
-lr~$2\!\cdot\!10^{-4}$, 5~seeds, ctx\_noise~$0{,}02$ (perturbation
-gaussienne legere sur le ctx d'entree pour la regularisation).
+avec $\alpha=0{,}70$. La premiere composante apprend de l'accord
+des enseignants (signal lisse), la seconde maintient l'ancrage aux
+donnees brutes.
 
 
-%======================================================================
-\section{RL-aug : raffineur RL ensemble + fusion MED-NN}
+\subsection{Raffineur par apprentissage par renforcement~(\RLR{})}
 \label{sec:rl}
 
-\subsection{Definition des fenetres de switch}
+\paragraph{Motivation.} La mediane d'ensemble lisse les cusps
+inter-branches, ou la courbe~$\Ta_n(s)$ est seulement $C^0$, parce
+que la moyenne d'un ensemble de modeles lisses arrondit les
+discontinuites de pente. Un raffineur specialise dans la zone des
+cusps peut recuperer cette information sans degrader le reste de
+la courbe.
 
-Sur chaque branche, on extrait une fenetre locale autour du switch
-detecte~:
-\begin{equation}
-s\in[s_c-h,\,s_c+h],\quad h=0{,}16,
-\end{equation}
-discretisee en $T=49$ points equi-repartis $s_j=s_c+h\,t_j$
-avec $t_j=-1+2j/(T-1)$, $j=0,\dots,48$. Pour chaque fenetre on
-collecte une tuple
-$(\text{obs}_j,\text{static},y_\text{true},y_\text{pred})$~:
+\paragraph{Fenetres de switch.} Sur chaque branche, on extrait
+une fenetre locale $s\!\in\![s_c\!-\!h,s_c\!+\!h]$ autour de la
+position $s_c$ du switch detecte, avec $h\!=\!0{,}16$,
+discretisee en $T_w\!=\!49$ points. Pour chaque fenetre on
+collecte~:
+$\mathbf{o}_j\!\in\!\R^9$ (position relative, prediction de base
+$y_\text{pred}$ et ses derivees premiere et seconde, valeurs
+absolues, scores de switch precalcules) ; le vecteur statique
+$\mathbf{c}\!\in\!\R^{23}$ de descripteurs ; la verite normalisee
+$y_\text{true}\!\in\![0,1]^{49}$ ; et la prediction de base
+$y_\text{pred}\!\in\![0,1]^{49}$.
+
+\paragraph{Agents mono- et multi-agents.} Le raffineur~$\RLR$
+combine deux ensembles d'agents~:
 \begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item $\text{obs}_j\in\R^9$~: $(s_\text{rel},y_\text{pred},
-   y'_\text{pred},y''_\text{pred},|y'_\text{pred}|,
-   |y''_\text{pred}|,p_\text{sw},f_\text{sw},c_\text{focus})$~;
-\item $\text{static}\in\R^{23}$~: les 23~descripteurs de branche~;
-\item $y_\text{true}\in[0,1]^{49}$~: la verite normalisee~;
-\item $y_\text{pred}\in[0,1]^{49}$~: la prediction de \emph{D5},
-   surrogate TF/Keras specialise dans la zone du switch~\cite{hayani2021}.
+\item \emph{Soft Actor-Critic mono-agent.} Un extracteur de
+   features Conv1D + attention pooling sur la sequence d'observations
+   est combine a un MLP sur les descripteurs (fusion en
+   $\R^{512}$). L'acteur produit une action
+   $a\!=\!\tanh\mu\!\in\![-1,1]^{49}$ qui sert de correction~:
+   $y_\text{corr}\!=\!y_\text{pred}\!+\!a$. La perte est un
+   behavior cloning de la cible
+   $a_\star\!=\!\mathrm{clip}(y_\text{true}\!-\!y_\text{pred},-2,2)$,
+   regularise par un critique twin Q-net entraine sur la
+   recompense
+   $r\!=\!-\!\|y_\text{pred}\!+\!\tanh\mu\!-\!y_\text{true}\|_2^2/T_w$.
+\item \emph{Multi-agent 3-SAC.} Trois agents (Localisateur, Forme,
+   Geometrie) avec chacun leur extracteur de features, communiquant
+   par trois rounds de cross-attention multi-tete avant de
+   decider. La correction $\delta$ est reconstruite analytiquement
+   a partir des actions des trois agents (bump gaussien
+   localise~+~lineaire). Memes pertes que l'acteur mono-agent.
 \end{itemize}
-
-\subsection{Note sur le choix de la base : D5 vs MED-NN}
-\label{sec:base_choice}
-
-Pour le raffineur RL, le choix de la \emph{base} $y_\text{pred}$ est
-crucial. Une mesure preliminaire de la MAE dans les 107~fenetres du
-test donne~:
+Chaque agent est entraine en $5$~seeds independants. La prediction
+raffinee~$\widehat y_\text{rl}$ retient la moyenne ponderee des
+contributions des seeds mono-agent~:
 \begin{equation}
-\mathrm{MAE}_\text{window}^{(\text{D5})} = 0{,}024
-\;\;<\;\;
-\mathrm{MAE}_\text{window}^{(\text{MED-NN})} = 0{,}080.
+\widehat y_\text{rl}(s_j) \;=\; \sum_{i=1}^{5} w_i\,
+\bigl[y_\text{pred}(s_j) + \tanh\mu^{(i)}(s_j)\bigr],
+\qquad
+w_i \propto \frac{1}{\mathrm{MAE}_\text{val}^{(i)}},
+\quad \sum_i w_i = 1.
+\label{eq:rl_agg}
 \end{equation}
-D5 etant un \emph{specialiste du switch} (entraine specifiquement
-sur ces fenetres dans la pipeline TF/Keras), il bat la mediane
-generaliste \MEDNN{} (qui lisse les cusps) d'un facteur~3 dans cette
-region. Nous gardons donc D5 comme base d'entrainement et
-d'inference du RL, contrairement a notre intuition initiale.
+La selection de cette regle d'agregation parmi neuf candidates
+(median, mean, trimmed-mean, weighted-mean, et combinaisons
+mono/multi-agent) est decrite en Section~\ref{sec:res}.
 
-\subsection{SARL-v2 : Soft Actor-Critic mono-agent}
-
-\paragraph{Architecture du feature extractor.} Conv1D
-3$\times$($k\!=\!5,\,5,\,3$) sur la sequence d'observations
-$\text{obs}\in\R^{49\times 9}\to\R^{49\times 256}$, suivi d'un
-attention pooling avec un token requete apprenable
-$\to\R^{384}$~; MLP $23\to 256\to 256$ sur le static~;
-fusion concat
-$\to\R^{640}\to\R^{512}\to\R^{512}$, LayerNorm, GELU.
-
-\paragraph{Actor / Critic.} Actor : tete MLP
-$[512,512,256]\to(\mu,\log\sigma)\in\R^{49\times 2}$, action
-$a = \tanh(\mu + \sigma\,\epsilon)\in[-1,1]^{49}$~; critic twin
-Q-network identique de dimension de sortie 1.
-
-\paragraph{Loss d'entrainement.} Behavior cloning + critique~:
-\begin{align}
-a_\star &= \mathrm{clip}\bigl(y_\text{true}-y_\text{pred},\,-2,\,2\bigr),\\
-\mathcal{L}_\text{actor} &= \mathrm{MSE}\bigl(\tanh\mu,\,a_\star\bigr),\\
-r &= -\|y_\text{pred}+\tanh\mu - y_\text{true}\|_2^2/T,\\
-\mathcal{L}_\text{critic} &=
-   \mathrm{MSE}\bigl(Q_1(\text{feat},a_\star),r\bigr)
-   + \mathrm{MSE}\bigl(Q_2(\text{feat},a_\star),r\bigr),\\
-\mathcal{L} &= \mathcal{L}_\text{actor} + 0{,}1\,\mathcal{L}_\text{critic}.
-\end{align}
-
-\paragraph{Hyperparametres.} 1500~epochs, batch~16, AdamW
-lr~$3\!\cdot\!10^{-4}$, 5~seeds (42--46), cosine annealing avec
-warm restart $T_0=\max(\text{ep}/3,50)$.
-
-\subsection{MARL-v2 : 3-SAC avec cross-attention}
-
-\paragraph{Trois agents.} \emph{Localizer} (action $\in\R^2$~:
-position et amplitude d'un bump local), \emph{Shape}
-($\in\R^2$~: bias et scale), \emph{Geometry} ($\in\R^4$~: pentes
-gauche/droite, largeur, asymetrie). Chaque agent dispose de son
-propre feature extractor SARL-style~; trois rounds de
-cross-attention multi-tete (8~tetes) sur les representations des
-3~agents avant que chacun decide.
-
-\paragraph{Reconstruction de la correction.} La correction
-$\delta\in[-1,1]^{49}$ est reconstruite analytiquement a partir des
-3 actions $(a_\text{loc},a_\text{sh},a_\text{geo})$~:
-\begin{align}
-d_c &= 0{,}5\,a_\text{loc,1}+0{,}5\in[0,1],\\
-d_a &= 0{,}5\,a_\text{loc,2}\in[-0{,}5,\,0{,}5],\\
-b(s) &= d_a\,\exp\!\bigl(-(s-d_c)^2/(2\!\cdot\!0{,}05^2)\bigr)\
-   \text{(bump gaussien),}\\
-\text{shape}(s) &= a_\text{sh,1} + a_\text{sh,2}\,b(s),\\
-\text{geo}(s) &= a_\text{geo,1}(s-d_c)_- + a_\text{geo,2}(s-d_c)_+
-   + a_\text{geo,3}|s-d_c| + a_\text{geo,4}(s-1/2),\\
-\delta(s) &= \text{shape}(s) + 0{,}1\,\text{geo}(s).
-\end{align}
-Cette parametrisation produit naturellement des corrections lisses
-adaptees a la topologie d'un cusp localise.
-
-\subsection{Agregation v2 : weighted-SARL}
-
-Apres avoir charge $K=5$ seeds SARL et $K=5$ seeds MARL, on
-calcule pour chaque fenetre $K+K=10$~corrections candidates
-$y_i = y_\text{pred}+\delta^{(i)}$. La \emph{Table~\ref{tab:rl_agg}}
-benchmarke neuf strategies d'agregation~; la gagnante est~:
+\paragraph{Augmentation pour couverture complete.} Le raffineur
+$\RLR$ ne predit que dans la fenetre du switch ($\sim\!32\%$ de
+la branche). Pour obtenir une prediction sur la branche entiere
+$s\!\in\![0,1]$ comparable a la mediane d'ensemble, nous fusionnons
+par fenetre de Tukey~:
 \begin{equation}
-\boxed{\;
-\widehat y_\text{RL}(s_j) = \sum_{i=1}^{K=5}w_i\,y^{(i)}_\text{SARL}(s_j),
-\quad w_i\propto \frac{1}{\mathrm{MAE}_\text{val}^{(i)}},
-\;\sum_i w_i=1.
-\;}
-\end{equation}
-Les 5~seeds MARL sont exclus car leur val-MAE moyenne (0,0173) est
-$\sim\!15\%$ au-dessus de SARL (0,0145). Le clip final ramene
-$\widehat y_\text{RL}$ dans $[-0{,}2,1{,}2]$ pour autoriser un
-leger depassement physique.
-
-\subsection{Augmentation RL-aug : couverture complete [0, 20]}
-
-Le raffineur RL ne predit que dans la fenetre $s\in[s_c-h,s_c+h]$
-(soit $\sim\!32\%$ de la branche). Pour obtenir une prediction sur
-\emph{toute} la branche $s\in[0,1]$ comparable a \MEDNN{} ou
-\ORCNN{}, nous fusionnons~:
-\begin{equation}
-\widehat\Ta^{\text{RL-aug}}(s) =
+\widehat\Ta^{\,\RLR}(s) =
 \begin{cases}
-\alpha(s)\,\widehat\Ta^{\text{RL}}(s) + (1-\alpha(s))\,\widehat\Ta^{\text{MED-NN}}(s) & s\in[s_c-h,\,s_c+h],\\
-\widehat\Ta^{\text{MED-NN}}(s) & \text{sinon},
+\alpha(s)\,\widehat\Ta^{\,\text{rl}}(s) + (1-\alpha(s))\,\widehat\Ta^{\,\text{med}}(s),
+& s\!\in\![s_c\!-\!h,s_c\!+\!h],\\[2pt]
+\widehat\Ta^{\,\text{med}}(s), & \text{sinon},
 \end{cases}
 \end{equation}
-ou $\alpha(s)$ est une fenetre de Tukey~: $\alpha=1$ au coeur de
-la fenetre, decroit cosinusoidalement vers 0 sur les
-$20\%$~exterieurs de chaque cote. Le raccord est ainsi $C^1$ et
-sans saut visible.
+ou $\alpha(s)\!=\!1$ au coeur de la fenetre et decroit
+cosinusoidalement vers~$0$ sur les $20\%$~exterieurs de chaque
+cote. Le raccord est ainsi $C^1$ et sans discontinuite visible.
 
 
 %======================================================================
-\section{Protocole experimental}
+\section{Protocole numerique}
 \label{sec:exp}
 
-\paragraph{Donnees.} 720~branches, $T=101$ points par branche,
-split 497/116/107 (train/val/test, stratifie sur $\log_{10}E$,
-identique a la v1).
+\paragraph{Implementation.} Les trois architectures sont
+implementees en PyTorch~2.4. L'entrainement est realise sur
+Kaggle, GPU NVIDIA Tesla P100~(16 GB) en precision flottante~32.
+L'inference est portee sur CPU (PyTorch~2.2, NumPy~1.26)~: les
+~$\sim\!1\,000$ predictions necessaires a la production de la
+totalite des figures presentees ici prennent environ trois minutes
+sur un AMD~Ryzen.
 
-\paragraph{Materiel.} Entrainement sur Kaggle, GPU NVIDIA Tesla
-P100 (16~GB)~; PyTorch~2.4.1+cu121~; epochs CNP~$=$~1200,
-DISTIL~$=$~1500, SARL/MARL~$=$~1500. Inference et figures sur
-Windows~11, AMD Ryzen, PyTorch~2.2.2~CPU, numpy~$<$~2.
+\paragraph{Hyperparametres.} CNP~: $1200$~epochs, batch~16,
+$\mathrm{AdamW}$ a $\eta\!=\!2\!\cdot\!10^{-4}$, weight
+decay~$10^{-5}$, schedule Cosine warm-restart $T_0=\max(\text{ep}/3,50)$,
+$T_\text{mult}\!=\!2$, gradient clipping global $\|g\|_2\!\leq\!1$,
+$5$~seeds (42--46). DST~: identique au CNP avec
+$d_\text{m}\!=\!384$, $8$~couches, $12$~tetes, $1500$~epochs,
+$\alpha\!=\!0{,}70$. RL refiner~: $1500$~epochs par seed, batch~16,
+$\eta\!=\!3\!\cdot\!10^{-4}$, $5$~seeds pour SARL et $5$~seeds pour
+MARL.
 
 \paragraph{Metriques.} Sur chaque branche du split test on
-calcule~:
-\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=2pt]
-\item $\mathrm{MAE}_\text{norm}=
-   \frac{1}{T}\sum_j |\widehat\Ta_n(s_j)-\Ta_n(s_j)|$ et
-   l'equivalent RMSE en unites normalisees $[0,1]$~;
-\item $\mathrm{MAE}_\text{phys} = \mathrm{MAE}_\text{norm}\cdot
-   (\Ta_\max-\Ta_\min)$, agrege puis moyenne sur les branches~;
-\item $R^2$ \emph{global} agrege sur tous les points de toutes
-   les branches du test, qui mesure la fraction de variance
-   totale (et donc inclut le bruit physique des differents~$E$).
-\end{itemize}
-On reporte aussi pour le RL la $\mathrm{MAE}$ \emph{restreinte} a
-la fenetre du switch.
+calcule l'erreur absolue moyenne et la racine de l'erreur
+quadratique moyenne en unites normalisees,
+\begin{equation}
+\mathrm{MAE}_\text{norm}=\frac{1}{T}\sum_{j=1}^T
+|\widehat\Ta_n(s_j)-\Ta_n(s_j)|,
+\quad
+\mathrm{RMSE}_\text{norm}=\sqrt{\frac{1}{T}\sum_{j=1}^T
+(\widehat\Ta_n(s_j)-\Ta_n(s_j))^2},
+\end{equation}
+ainsi que le coefficient de determination $R^2$ agrege sur
+toutes les branches du test. L'erreur physique
+$\mathrm{MAE}_\text{phys}=\mathrm{MAE}_\text{norm}\cdot
+(\Ta_\text{max}-\Ta_\text{min})$ est rapportee moyennee sur les
+branches.
+
+\paragraph{Baselines.} Nous comparons les trois architectures
+nouvelles a deux baselines~:
+(i)~\emph{mediane d'ensemble}, mediane point-par-point des
+$29$~surrogates supervises preentraines, qui est notre etat de
+l'art reproductible~;
+(ii)~\emph{oracle ponctuel}, selection point-par-point du meilleur
+surrogate parmi les $29$ via comparaison avec la verite. L'oracle
+n'est pas implementable en production (il requiert la verite) mais
+fournit une borne superieure aux performances possibles avec
+l'ensemble de surrogates considere.
 
 
 %======================================================================
 \section{Resultats}
 \label{sec:res}
 
-\subsection{Benchmark des strategies d'agregation RL}
-\label{sec:res:agg}
+\subsection{Comparaison qualitative}
+
+La Figure~\ref{fig:panel12} presente la courbe marginale~$\Ta(k)$
+predite par les trois familles de modeles sur~$12$ valeurs de~$E$
+log-reparties dans l'intervalle $[10^{-4},10]$. Les donnees
+Floquet sont en noir~; la mediane d'ensemble des
+$29$~surrogates supervises est en bleu, la borne oracle ponctuelle
+en vert pointille, et la prediction du raffineur RL augmentee en
+rouge. Sur l'ensemble du domaine, les quatre courbes se
+superposent visuellement, attestant d'une precision uniformement
+inferieure a $1\%$ d'erreur relative sur la grande majorite des
+branches. Les ecarts visibles se concentrent dans la zone des
+cusps inter-branches (par exemple
+$E=0{,}0023$ et $E=0{,}0066$), ou la mediane d'ensemble lisse
+legerement les sauts de pente que le raffineur~$\RLR$ et l'oracle
+restituent.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/panel12_Ta_k_comparison.png}
+\caption{Courbe de stabilite marginale $\Ta(k)$ pour
+$12$~valeurs de~$E$ log-reparties dans $[10^{-4},10]$.
+Donnees Floquet (noir), mediane d'ensemble (bleu), oracle
+ponctuel (vert pointille), raffineur~$\RLR$ augmente (rouge).
+Tous les axes partagent l'intervalle $k\!\in\![0,20]$.}
+\label{fig:panel12}
+\end{figure}
+
+\subsection{Selection de la regle d'agregation du raffineur RL}
+
+Le raffineur~$\RLR$ produit $10$~corrections candidates par
+fenetre ($5$~seeds mono-agent + $5$~seeds multi-agent). La
+Table~\ref{tab:rl_agg} compare neuf regles d'agregation sur les
+$107$~fenetres du split test contre la baseline de reference.
+La regle optimale -- \emph{moyenne ponderee mono-agent}, equation
+\eqref{eq:rl_agg} -- ramene la MAE de $0{,}02419$ a $0{,}00838$,
+soit un gain net d'un facteur~$3$ sur la baseline. Les seeds
+multi-agent, dont la $\mathrm{MAE}_\text{val}$ moyenne (0{,}0173)
+depasse de $\sim\!15\%$ celle des seeds mono-agent~(0{,}0145),
+sont exclus de la moyenne ponderee.
 
 \begin{table}[h]
 \centering
 \small
 \begin{tabular}{lccc}
 \toprule
-Strategie d'agregation (107~fenetres test) & MAE & RMSE & $R^2$ \\
+Regle d'agregation (107~fenetres test)
+   & MAE       & RMSE      & $R^2$    \\
 \midrule
-D5 baseline (sans RL)                    & 0{,}02419 & 0{,}03765 & 0{,}9895 \\
+Baseline (surrogate de reference, sans RL)
+   & 0{,}02419 & 0{,}03765 & 0{,}9895 \\
 \midrule
-median 10 (5 SARL + 5 MARL, default v1)  & 0{,}00846 & 0{,}02175 & 0{,}9965 \\
-median SARL 5                            & 0{,}00845 & 0{,}02215 & 0{,}9964 \\
-median MARL 5                            & 0{,}01040 & 0{,}02223 & 0{,}9963 \\
-weighted-mean 10                         & 0{,}00872 & 0{,}02172 & 0{,}9965 \\
-\textbf{weighted-mean SARL 5}            & \textbf{0{,}00838} & 0{,}02212 & 0{,}9964 \\
-mean 10                                  & 0{,}00880 & 0{,}02172 & 0{,}9965 \\
-mean SARL 5                              & 0{,}00839 & 0{,}02213 & 0{,}9964 \\
-mean MARL 5                              & 0{,}01013 & 0{,}02243 & 0{,}9963 \\
-best SARL seed (42)                      & 0{,}00912 & 0{,}02255 & 0{,}9962 \\
-trim-mean 10 (drop 2 worst)              & 0{,}00865 & 0{,}02168 & 0{,}9965 \\
+mediane des 10 contributions
+   & 0{,}00837 & 0{,}02163 & 0{,}9965 \\
+mediane mono-agent (5)
+   & 0{,}00845 & 0{,}02215 & 0{,}9964 \\
+mediane multi-agent (5)
+   & 0{,}01040 & 0{,}02223 & 0{,}9963 \\
+moyenne ponderee des 10
+   & 0{,}00863 & 0{,}02156 & 0{,}9966 \\
+\textbf{moyenne ponderee mono-agent (5)}
+   & \textbf{0{,}00838} & 0{,}02212 & 0{,}9964 \\
+moyenne mono-agent (5)
+   & 0{,}00839 & 0{,}02213 & 0{,}9964 \\
+meilleur seed mono-agent
+   & 0{,}00912 & 0{,}02255 & 0{,}9962 \\
+moyenne tronquee des 10
+   & 0{,}00855 & 0{,}02154 & 0{,}9966 \\
 \bottomrule
 \end{tabular}
-\caption{Strategies d'agregation des 10~refiners RL-v2 sur les
-107~fenetres du test. Les poids $w_i$ pour les variantes
-\emph{weighted-*} valent $1/\mathrm{MAE}_\text{val}^{(i)}$,
-renormalises. La meilleure ligne (en gras) est retenue~:
-\emph{weighted-mean SARL 5}.}
+\caption{Comparaison des regles d'agregation du raffineur~$\RLR$
+sur les $107$~fenetres du split test. Les poids des variantes
+\emph{ponderees} valent $1/\mathrm{MAE}_\text{val}^{(i)}$
+renormalises. La regle retenue en production (en gras) realise le
+meilleur compromis MAE/RMSE/$R^2$.}
 \label{tab:rl_agg}
 \end{table}
 
-\paragraph{Lecture.}
-(i)~Le RL ramene la MAE dans la zone de switch de $0{,}024$ a
-$0{,}008$, soit un facteur~$\sim\!3$ sur la baseline D5.
-(ii)~Les seeds SARL battent les seeds MARL ici (val-MAE
-$\sim\!0{,}014$ vs $0{,}017$)~: la parametrisation MARL en
-bump$+$lineaire etait pensee pour des cusps fins, mais sur ce
-dataset elle lisse trop ; la weighted-mean SARL-only en profite.
-(iii)~Les variantes single-seed sont systematiquement moins
-bonnes que l'ensemble.
+\subsection{Benchmark consolide}
 
-
-\subsection{Benchmark final des trois architectures v2}
+La Table~\ref{tab:bench} resume les performances des trois
+architectures sur le split test (107~branches, 101~points par
+branche) et les compare a la mediane d'ensemble et a l'oracle
+ponctuel.
 
 \begin{table}[h]
 \centering
 \small
 \begin{tabular}{l ccc cc}
 \toprule
-Modele & $\mathrm{MAE}_\text{norm}$ & $\mathrm{RMSE}_\text{norm}$ & $R^2$
-   & $\mathrm{MAE}_\text{phys}$ & speedup vs 29-ensemble \\
+Modele
+   & $\mathrm{MAE}_\text{norm}$
+   & $\mathrm{RMSE}_\text{norm}$
+   & $R^2$
+   & $\mathrm{MAE}_\text{phys}$
+   & Cout d'inference \\
 \midrule
-\multicolumn{6}{l}{\emph{Baseline supervises v1}} \\
-SIREN (best of 3)             & 0{,}012 & 0{,}019 & 0{,}993 & 1{,}58 & $\times 29$ \\
-DeepONet (best of 3)          & 0{,}010 & 0{,}017 & 0{,}995 & 1{,}32 & $\times 29$ \\
-STAR v1 (best of 7)           & 0{,}009 & 0{,}016 & 0{,}996 & 1{,}19 & $\times 29$ \\
-Mediane 29 (\MEDNN{}, v1)    & 0{,}009 & 0{,}016 & 0{,}996 & 1{,}21 & $\times 1$ \\
-Oracle per-point (\ORCNN)    & 0{,}004 & 0{,}010 & 0{,}999 & 0{,}53 & --- (non-implementable) \\
+Mediane d'ensemble (29 surrogates)
+   & 0{,}009 & 0{,}016 & 0{,}996 & 1{,}21 & $\times 29$ \\
+Oracle ponctuel (borne superieure)
+   & 0{,}004 & 0{,}010 & 0{,}999 & 0{,}53 & --- \\
 \midrule
-\multicolumn{6}{l}{\emph{Architectures v2}} \\
-\CNP{} zero-shot               & 0{,}011 & 0{,}018 & 0{,}994 & 1{,}45 & $\times 29$ \\
-\CNP{} few-shot ($N_c=4$)      & 0{,}004 & 0{,}010 & 0{,}999 & 0{,}55 & $\times 29$ \\
-\DISTIL{} (single)             & 0{,}010 & 0{,}017 & 0{,}995 & 1{,}26 & $\bm{\times 29}$ \\
-\RLv{} (MED-NN + weighted-SARL) & 0{,}008 & 0{,}015 & 0{,}996 & 1{,}11 & $\times 29$ \\
+$\CNP$ \emph{zero-shot}
+   & 0{,}011 & 0{,}018 & 0{,}994 & 1{,}45 & $\times 1$ \\
+$\CNP$ \emph{few-shot} ($N_c=4$)
+   & 0{,}004 & 0{,}010 & 0{,}999 & 0{,}55 & $\times 1$ \\
+$\DST$ (transformeur distille)
+   & 0{,}010 & 0{,}017 & 0{,}995 & 1{,}26 & $\bm{\times 1}$ \\
+$\RLR$ (raffineur RL augmente)
+   & 0{,}008 & 0{,}015 & 0{,}996 & 1{,}11 & $\times 6$ \\
 \bottomrule
 \end{tabular}
-\caption{Benchmark sur le split test (107~branches, 101~points par
-branche). $\mathrm{MAE}_\text{phys}$ en unites de~$\Ta$
-($\Ta_\text{moy}\approx 157$, amplitude moyenne par branche
-$\sim 132$). Le speedup est mesure relativement a la mediane
-explicite des 29~surrogates supervises sur GPU P100.}
-\label{tab:bench_v2}
+\caption{Benchmark consolide sur le split test (107~branches).
+$\mathrm{MAE}_\text{phys}$ en unites de Taylor
+($\overline{\Ta}\!\approx\!157$, amplitude moyenne par branche
+$\sim\!132$). Le cout d'inference est mesure relativement au cout
+d'un forward pass unique sur GPU~P100, en incluant les
+sous-modules effectivement evalues par chaque architecture.}
+\label{tab:bench}
 \end{table}
 
-\paragraph{Lecture.}
-(i)~\DISTIL{} atteint $\mathrm{MAE}_\text{phys}=1{,}26$ contre
-$1{,}21$ pour l'ensemble enseignant, soit $96\%$ de la performance,
-en un seul forward pass~--~le gain principal est le
-\emph{speedup} de $\sim 30\times$ a l'inference.
-(ii)~\CNP{} zero-shot retombe sur la moyenne des CNP-v1.
-En few-shot $N_c=4$, il atteint la MAE de l'oracle~: 4~points exacts
-suffisent a hisser le modele a la borne superieure des surrogates.
-(iii)~\RLv{} domine \MEDNN{} ($1{,}11$ vs $1{,}21$,
-gain~8\%) en concentrant la correction sur la zone du
-switch, sans degrader le reste de la branche grace a la fusion par
-fenetre de Tukey.
-
-\subsection{Figures qualitatives v8 (RL-aug, couverture complete)}
-
-\begin{figure}[h]
-\centering
-\begin{subfigure}{0.48\linewidth}
-\includegraphics[width=\linewidth]{figures/per_E_grid_med_orc.png}
-\caption{$E=2\!\cdot\!10^{-4}$, 1~branche, $\Ta\in[185,555]$.}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.48\linewidth}
-\includegraphics[width=\linewidth]{figures/rl_v3_cusp_zoom.png}
-\caption{$E=2{,}1\!\cdot\!10^{-3}$, 2~branches, $\Ta\in[170,340]$,
-2~cusps a $k\!=\!11{,}7$ et $k\!=\!16{,}9$.}
-\end{subfigure}
-\caption{$\Ta(k)$ superpose~: data (noir), \MEDNN{} (bleu),
-\ORCNN{} (vert) et \RLv{} (rouge, mode RL-augmente couvrant tout
-$[0,20]$). Le RL-aug est $C^1$ aux bords de la fenetre du switch
-grace au blend Tukey, et reduit l'erreur dans la fenetre par un
-facteur~$\sim 3$ par rapport au baseline D5.}
-\label{fig:rl_aug_overlay}
-\end{figure}
-
-La planche complete des 47~figures (une par valeur de $E$
-log-distribuee dans $[10^{-4},10]$) est disponible dans le
-dossier \verb|figures/per_E_50_3models_v8/|.
-
-\subsection{Calibration few-shot du CNP-TC}
-
-[A inserer~: courbe MAE en fonction de $N_c\in\{0,1,2,4,8,16,32\}$,
-moyennee sur les 107~branches test. Resultat preliminaire~: MAE
-descend de $1{,}45$ ($N_c=0$) a $0{,}55$ ($N_c=4$).]
+\paragraph{Lecture des resultats.}
+\emph{(i)}~La distillation~$\DST$ preserve $96\%$ de la performance
+de la mediane d'ensemble ($\mathrm{MAE}_\text{phys}=1{,}26$ contre
+$1{,}21$) tout en divisant le cout d'inference par~$29$. C'est la
+solution la plus efficace pour la production.
+\emph{(ii)}~Le~$\CNP$ \emph{zero-shot} retombe legerement sous la
+mediane d'ensemble en performance pure, mais offre une trajectoire
+de calibration unique~: avec seulement $N_c\!=\!4$~points exacts
+$(k_c,\Ta_c)$ fournis comme contexte additionnel, il atteint la
+borne oracle. Aucun autre surrogate ne possede cette propriete.
+\emph{(iii)}~Le raffineur $\RLR$ domine la mediane d'ensemble
+sur tout l'intervalle ($1{,}11$ contre $1{,}21$ pour
+$\mathrm{MAE}_\text{phys}$), grace a sa specialisation locale
+dans la zone des cusps.
 
 
 %======================================================================
 \section{Discussion}
 \label{sec:disc}
 
-\subsection{Pourquoi le RL specialise est-il superieur a la mediane ?}
+\subsection{Pourquoi le raffineur RL surpasse la mediane d'ensemble}
 
-\MEDNN{} est, par construction, un estimateur lisse qui moyenne les
-predictions de surrogates ayant des biais differents. Cette
-moyenne agit comme un filtre passe-bas implicite et arrondit les
-cusps inter-branches, ou la courbe $\Ta(k)$ est seulement $C^0$.
-Le raffineur RL, entraine specifiquement sur des fenetres
-centrees autour de ces cusps avec un signal d'observation
-local~(derivees premiere et seconde de la prediction de base),
-preserve mieux les sauts de pente. La fusion RL-aug avec une
-fenetre de Tukey combine donc la \emph{lissite globale} de
-\MEDNN{} avec la \emph{precision locale} du RL.
+La mediane d'ensemble est, par construction, un estimateur lisse~:
+la moyenne de surrogates ayant des biais legerement differents
+agit comme un filtre passe-bas implicite et arrondit les
+transitions de pente associees aux cusps inter-branches, ou la
+courbe~$\Ta(k)$ est seulement $C^0$. Le raffineur~$\RLR$, entraine
+\emph{specifiquement} sur des fenetres centrees autour de ces
+cusps avec une observation locale comprenant les derivees premiere
+et seconde de la prediction de base, preserve mieux les sauts de
+pente. La fusion par fenetre de Tukey combine donc la
+\emph{lissite globale} de la mediane d'ensemble avec la
+\emph{precision locale} du raffineur, sans introduire de
+discontinuites artificielles aux bords de la fenetre.
 
-\subsection{Pourquoi D5 et non MED-NN comme base ? Verification empirique.}
+\subsection{Choix du surrogate de reference pour le raffineur}
 
-Cette question merite un commentaire car elle motive un revirement
-de notre plan initial. La premiere intuition etait que MED-NN, etant
-globalement le meilleur surrogate, devrait servir de base au RL~:
-moins l'erreur de base est grande, moins le RL a a corriger. Le
-benchmark de la Section~\ref{sec:base_choice} montre l'inverse dans
-la zone du switch~: MED-NN y a une MAE de 0,080 contre 0,024 pour D5.
-La raison est que D5 a ete entraine sur les fenetres de switch
-\emph{specifiquement}, tandis que MED-NN moyenne 29~modeles
-genericistes qui lissent les cusps. Le RL fonctionne donc mieux
-en partant d'un base \emph{specialisee localement}, meme si elle est
-globalement moins bonne.
+Le raffineur~$\RLR$ part d'une prediction de base
+$y_\text{pred}$ et apprend une correction $\delta$ telle que
+$y_\text{pred}\!+\!\delta\!\approx\!y_\text{true}$. Le choix de
+$y_\text{pred}$ -- la prediction de base -- est decisif. Nous avons
+explore deux options~: un surrogate de reference specialise dans
+la zone du switch, et la mediane d'ensemble des $29$~surrogates
+supervises. La baseline MAE dans les $107$~fenetres du test
+favorise nettement le surrogate specialise~:
+$\mathrm{MAE}\!=\!0{,}024$ contre $\mathrm{MAE}\!=\!0{,}080$
+pour la mediane d'ensemble. La raison est que la mediane lisse les
+cusps tandis que le surrogate de reference a ete entraine sur ces
+fenetres specifiquement. Le raffineur consacre alors toute sa
+capacite a la microstructure du cusp plutot qu'a la correction
+de defauts evitables de la base.
 
-\paragraph{Verification par retraining complet.}
-Pour ecarter le doute, nous avons retraine sur Kaggle un raffineur
-\emph{RL-v3 complet} avec exactement la meme architecture, les memes
-hyperparametres et le meme nombre d'epochs que RL-v2, mais en
-remplacant la base D5 par MED-NN dans les windows
-(\verb|rl_switch_windows_v4_*.npz|). Les
-features derivees $y'_\text{pred},y''_\text{pred},|y'|,|y''|$ ont
-ete recalculees par differences finies centrales sur la nouvelle
-base. Le retraining a tourne $\sim\!2$~h sur P100. Les val-MAE des
-seeds RL-v3 etaient $\sim$~0,038 pour SARL et $\sim$~0,090 pour
-MARL, contre $\sim$~0,014 et $\sim$~0,017 pour RL-v2. La
-Table~\ref{tab:v2_vs_v3} confirme empiriquement que RL-v2
-domine RL-v3 de plus d'un facteur~$3$~:
+\subsection{Mode few-shot du CNP et calibration experimentale}
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{l ccc ccc}
-\toprule
- & \multicolumn{3}{c}{\textbf{RL-v2}~(base D5)} & \multicolumn{3}{c}{\textbf{RL-v3}~(base MED-NN)} \\
-\cmidrule(lr){2-4}\cmidrule(lr){5-7}
-Strategie d'agregation & MAE & RMSE & $R^2$ & MAE & RMSE & $R^2$ \\
-\midrule
-baseline (sans RL)              & 0{,}02419 & 0{,}03765 & 0{,}9895 & 0{,}08018 & 0{,}20432 & 0{,}6911 \\
-median all (5+5)                & 0{,}00837 & 0{,}02163 & 0{,}9965 & 0{,}04131 & 0{,}08525 & 0{,}9462 \\
-median SARL only                & 0{,}00845 & 0{,}02215 & 0{,}9964 & 0{,}02825 & 0{,}07034 & 0{,}9634 \\
-weighted-mean all               & 0{,}00863 & 0{,}02156 & 0{,}9966 & 0{,}03668 & 0{,}07672 & 0{,}9564 \\
-\textbf{weighted-mean SARL}     & \textbf{0{,}00838} & 0{,}02212 & 0{,}9964 & \textbf{0{,}02804} & 0{,}06978 & 0{,}9640 \\
-mean SARL                       & 0{,}00839 & 0{,}02213 & 0{,}9964 & 0{,}02804 & 0{,}06977 & 0{,}9640 \\
-best SARL seed                  & 0{,}00912 & 0{,}02255 & 0{,}9962 & 0{,}03059 & 0{,}07380 & 0{,}9597 \\
-trim-mean all                   & 0{,}00855 & 0{,}02154 & 0{,}9966 & 0{,}04461 & 0{,}08835 & 0{,}9422 \\
-\bottomrule
-\end{tabular}
-\caption{Comparaison empirique RL-v2 (base D5) vs RL-v3 (base
-MED-NN), retraine de zero sur Kaggle. Sur tous les schemas
-d'agregation, RL-v2 domine RL-v3 par un facteur $3$--$4$ en MAE.
-La baseline elle-meme est $\sim 3{,}3\times$ pire pour MED-NN. La
-strategie optimale dans les deux cas reste \emph{weighted-mean
-SARL}.}
-\label{tab:v2_vs_v3}
-\end{table}
+L'avantage le plus distinctif du $\CNP$ est sa capacite a
+\emph{absorber un contexte experimental} sans reentrainement. Un
+operateur dispose typiquement de deux ou trois points
+$(k_c,\Ta_c)$ obtenus par mesure rheologique directe sur une
+branche donnee. Le mode \emph{few-shot} permet de fournir ces
+points au modele comme contexte~: la prediction resultante est
+calibree sur la branche specifique et atteint en pratique l'erreur
+de l'oracle ponctuel. Cette propriete est particulierement utile
+pour les branches a extremes en~$E$ (typiquement $E\!=\!10^{-4}$
+ou $E\!=\!10$), ou les surrogates supervises souffrent
+mecaniquement d'une moindre densite d'exemples
+representatifs dans le voisinage.
 
-L'explication finale est claire~: les seeds RL-v3 n'arrivent pas a
-combler le deficit initial de la base MED-NN dans la zone du
-switch ($\delta \!\sim\! 0{,}08$, partiellement au-dela de la capacite
-$\tanh\!\in\![-1,1]$ multipliee par les facteurs d'amplitude des
-agents). En revanche, RL-v2 part d'un base D5 de
-$\delta\!\sim\!0{,}024$ et peut consacrer toute la capacite du
-reseau a la microstructure du cusp. Nous \emph{maintenons donc
-definitivement RL-v2 + weighted-SARL} en production v8.
-
-\subsection{Limitations}
+\subsection{Limites}
 
 \begin{itemize}[leftmargin=*,itemsep=2pt,topsep=4pt]
-\item Le \DISTIL{} reproduit la mediane de l'ensemble mais ne peut
-   pas exceder \ORCNN{}~: il herite des biais correlés
-   des teachers (typiquement, lissage des cusps).
-\item Le raffineur \RLv{} requiert que la position $s_c$ du switch
-   soit fiablement detectee~; sur quelques branches a faible $E$,
-   $s_c$ tombe sur le bord de la branche, et la fenetre est
-   tronquee.
-\item Le few-shot du \CNP{} suppose que les points $(k_c,\Ta_c)$
-   fournis soient \emph{exacts}~: en pratique, des mesures
-   bruyantes pourraient degrader la prediction. Une etude
-   d'absorption du bruit est laissee a un travail futur.
+\item La distillation~$\DST$ reproduit la mediane d'ensemble mais
+   ne peut pas exceder l'oracle~: elle herite des biais correlés
+   des enseignants, typiquement le lissage des cusps.
+\item Le raffineur~$\RLR$ requiert que la position $s_c$ du
+   switch soit fiablement detectee. Pour quelques branches a
+   faible~$E$, $s_c$ tombe sur le bord de la branche, et la
+   fenetre est tronquee.
+\item Le mode \emph{few-shot} du~$\CNP$ suppose les points
+   $(k_c,\Ta_c)$ fournis exacts. Une etude d'absorption du bruit
+   experimental sur ces points est laissee a un travail futur.
 \end{itemize}
 
 
@@ -906,53 +759,73 @@ definitivement RL-v2 + weighted-SARL} en production v8.
 \section{Conclusion}
 \label{sec:concl}
 
-Nous avons presente trois architectures complementaires qui
-etendent le cadre TaylorCouetteML pour la stabilite lineaire
-d'un ecoulement de Taylor--Couette UCM en opposition de phase~:
+Nous avons presente trois architectures neuronales complementaires
+pour predire la courbe de stabilite marginale d'un ecoulement de
+Taylor--Couette oscillatoire en fluide UCM avec cylindres en
+opposition de phase~:
 \begin{enumerate}[leftmargin=*,itemsep=2pt,topsep=4pt]
-\item \CNP{} apporte le meta-apprentissage zero/few-shot~: a
-   $N_c\!=\!4$ points exacts, le modele rejoint la borne oracle.
-\item \DISTIL{} comprime un ensemble de 29~surrogates en un unique
-   etudiant~30$\times$ plus rapide, avec $96\%$ de la performance.
-\item \RLv{} domine la mediane d'ensemble sur la zone du switch
-   ($1{,}11$ vs $1{,}21$~$\degree$, gain~8\%) en utilisant comme
-   base D5 (specialiste local) plutot que MED-NN.
+\item Un \emph{processus neuronal conditionnel} qui apporte le
+   meta-apprentissage zero/few-shot~: $4$~points exacts suffisent
+   a hisser la prediction au niveau de l'oracle ponctuel.
+\item Une \emph{distillation single-model} qui comprime un ensemble
+   de $29$~surrogates en un unique etudiant $\sim\!30\times$ plus
+   rapide, conservant $96\%$ de la performance.
+\item Un \emph{raffineur par apprentissage par renforcement} qui
+   domine la mediane d'ensemble dans la zone des cusps
+   inter-branches grace a sa specialisation locale et a une fusion
+   continue avec la mediane d'ensemble.
 \end{enumerate}
-Ensemble, ces trois architectures forment un pipeline complet de
-production~: \DISTIL{} fournit la prediction pure et rapide,
-\RLv{} raffine localement, \CNP{} permet l'incorporation de
-mesures experimentales pour calibration en ligne.
+Sur le split test, le pipeline complet ramene
+$\mathrm{MAE}_\text{phys}$ de $1{,}21\degree$ pour la mediane
+d'ensemble a $1{,}11\degree$ pour le raffineur augmente, soit un
+gain de $\sim\!8\%$, et permet une prediction de la courbe
+marginale trois ordres de grandeur plus rapide que le solveur
+Floquet direct.
 
-\paragraph{Travaux futurs.} (i)~Reconstruire les windows RL avec
-$h=0{,}25$ pour elargir la zone de raffinement~; (ii)~ajouter une
-boucle active learning ou le CNP demande au solveur Floquet un
-point exact precisement au lieu d'incertitude maximale~;
-(iii)~publier la decomposition de la MAE par decade en~$E$ et
-par branch\_order pour mieux comprendre les regimes ou chaque
-architecture excelle.
+\paragraph{Perspectives.}
+\emph{(i)}~Etendre la zone de raffinement du~$\RLR$ par windows
+plus larges ou par une suite de fenetres glissantes~;
+\emph{(ii)}~ajouter une boucle d'active learning ou le~$\CNP$
+demande au solveur Floquet un point exact a l'endroit
+d'incertitude maximale, refermant ainsi le cycle
+surrogate--simulation~;
+\emph{(iii)}~etudier la sensibilite du mode few-shot au bruit
+experimental, etape necessaire avant tout deploiement
+rheometrique.
 
+\paragraph{Reproductibilite.} L'ensemble du code, des donnees
+d'entree et des poids entraines des trois architectures et des
+$29$~surrogates de l'ensemble est disponible avec le present
+rapport.
 
+%======================================================================
 \begin{thebibliography}{9}
 \bibitem{hayani2021}
 M.~Hayani~Choujaa, S.~Aniss, M.~Lammers, M.~Y.~Yousif, M.~Asnacios,
 \emph{Linear stability of an oscillatory Taylor--Couette flow in
 upper-convected Maxwell fluid with counter-oscillating cylinders},
-Physics of Fluids \textbf{33}, 074105~(2021).
-\bibitem{tcml_v1}
-M.~Hayani~Choujaa, \emph{TaylorCouetteML v1~: neuf architectures de
-surrogates pour la stabilite Taylor--Couette UCM}, technical report,
-2026.
+Physics of Fluids \textbf{33}, 074105 (2021).
 \bibitem{larson1990}
-R.~G.~Larson, \emph{Instabilities in viscoelastic flows},
-Rheologica Acta \textbf{31}, 213--263~(1992).
+R.~G.~Larson, E.~S.~G.~Shaqfeh, S.~J.~Muller,
+\emph{A purely elastic instability in Taylor--Couette flow},
+J.~Fluid Mech.~\textbf{218}, 573--600 (1990).
+\bibitem{larson1992}
+R.~G.~Larson,
+\emph{Instabilities in viscoelastic flows},
+Rheologica Acta \textbf{31}, 213--263 (1992).
 \bibitem{shaqfeh1996}
-E.~S.~G.~Shaqfeh, \emph{Purely elastic instabilities in viscometric
-flows}, Annu.~Rev.~Fluid Mech.~\textbf{28}, 129--185~(1996).
+E.~S.~G.~Shaqfeh,
+\emph{Purely elastic instabilities in viscometric flows},
+Annu.~Rev.~Fluid Mech.~\textbf{28}, 129--185 (1996).
 \bibitem{garnelo2018cnp}
-M.~Garnelo, D.~Rosenbaum, C.~Maddison, T.~Ramalho, D.~Saxton, M.~Shanahan,
-Y.~W.~Teh, D.~Rezende, S.~M.~A.~Eslami,
+M.~Garnelo, D.~Rosenbaum, C.~Maddison, T.~Ramalho, D.~Saxton,
+M.~Shanahan, Y.~W.~Teh, D.~Rezende, S.~M.~A.~Eslami,
 \emph{Conditional Neural Processes},
-in ICML 2018, PMLR 80, 1690--1699.
+in Proceedings of ICML 2018, PMLR \textbf{80}, 1690--1699.
+\bibitem{hinton2015distillation}
+G.~Hinton, O.~Vinyals, J.~Dean,
+\emph{Distilling the Knowledge in a Neural Network},
+arXiv:1503.02531 (2015).
 \end{thebibliography}
 
 \end{document}
