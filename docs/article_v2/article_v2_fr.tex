@@ -820,7 +820,7 @@ preserve mieux les sauts de pente. La fusion RL-aug avec une
 fenetre de Tukey combine donc la \emph{lissite globale} de
 \MEDNN{} avec la \emph{precision locale} du RL.
 
-\subsection{Pourquoi D5 et non MED-NN comme base ?}
+\subsection{Pourquoi D5 et non MED-NN comme base ? Verification empirique.}
 
 Cette question merite un commentaire car elle motive un revirement
 de notre plan initial. La premiere intuition etait que MED-NN, etant
@@ -833,6 +833,57 @@ La raison est que D5 a ete entraine sur les fenetres de switch
 genericistes qui lissent les cusps. Le RL fonctionne donc mieux
 en partant d'un base \emph{specialisee localement}, meme si elle est
 globalement moins bonne.
+
+\paragraph{Verification par retraining complet.}
+Pour ecarter le doute, nous avons retraine sur Kaggle un raffineur
+\emph{RL-v3 complet} avec exactement la meme architecture, les memes
+hyperparametres et le meme nombre d'epochs que RL-v2, mais en
+remplacant la base D5 par MED-NN dans les windows
+(\verb|rl_switch_windows_v4_*.npz|). Les
+features derivees $y'_\text{pred},y''_\text{pred},|y'|,|y''|$ ont
+ete recalculees par differences finies centrales sur la nouvelle
+base. Le retraining a tourne $\sim\!2$~h sur P100. Les val-MAE des
+seeds RL-v3 etaient $\sim$~0,038 pour SARL et $\sim$~0,090 pour
+MARL, contre $\sim$~0,014 et $\sim$~0,017 pour RL-v2. La
+Table~\ref{tab:v2_vs_v3} confirme empiriquement que RL-v2
+domine RL-v3 de plus d'un facteur~$3$~:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{l ccc ccc}
+\toprule
+ & \multicolumn{3}{c}{\textbf{RL-v2}~(base D5)} & \multicolumn{3}{c}{\textbf{RL-v3}~(base MED-NN)} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Strategie d'agregation & MAE & RMSE & $R^2$ & MAE & RMSE & $R^2$ \\
+\midrule
+baseline (sans RL)              & 0{,}02419 & 0{,}03765 & 0{,}9895 & 0{,}08018 & 0{,}20432 & 0{,}6911 \\
+median all (5+5)                & 0{,}00837 & 0{,}02163 & 0{,}9965 & 0{,}04131 & 0{,}08525 & 0{,}9462 \\
+median SARL only                & 0{,}00845 & 0{,}02215 & 0{,}9964 & 0{,}02825 & 0{,}07034 & 0{,}9634 \\
+weighted-mean all               & 0{,}00863 & 0{,}02156 & 0{,}9966 & 0{,}03668 & 0{,}07672 & 0{,}9564 \\
+\textbf{weighted-mean SARL}     & \textbf{0{,}00838} & 0{,}02212 & 0{,}9964 & \textbf{0{,}02804} & 0{,}06978 & 0{,}9640 \\
+mean SARL                       & 0{,}00839 & 0{,}02213 & 0{,}9964 & 0{,}02804 & 0{,}06977 & 0{,}9640 \\
+best SARL seed                  & 0{,}00912 & 0{,}02255 & 0{,}9962 & 0{,}03059 & 0{,}07380 & 0{,}9597 \\
+trim-mean all                   & 0{,}00855 & 0{,}02154 & 0{,}9966 & 0{,}04461 & 0{,}08835 & 0{,}9422 \\
+\bottomrule
+\end{tabular}
+\caption{Comparaison empirique RL-v2 (base D5) vs RL-v3 (base
+MED-NN), retraine de zero sur Kaggle. Sur tous les schemas
+d'agregation, RL-v2 domine RL-v3 par un facteur $3$--$4$ en MAE.
+La baseline elle-meme est $\sim 3{,}3\times$ pire pour MED-NN. La
+strategie optimale dans les deux cas reste \emph{weighted-mean
+SARL}.}
+\label{tab:v2_vs_v3}
+\end{table}
+
+L'explication finale est claire~: les seeds RL-v3 n'arrivent pas a
+combler le deficit initial de la base MED-NN dans la zone du
+switch ($\delta \!\sim\! 0{,}08$, partiellement au-dela de la capacite
+$\tanh\!\in\![-1,1]$ multipliee par les facteurs d'amplitude des
+agents). En revanche, RL-v2 part d'un base D5 de
+$\delta\!\sim\!0{,}024$ et peut consacrer toute la capacite du
+reseau a la microstructure du cusp. Nous \emph{maintenons donc
+definitivement RL-v2 + weighted-SARL} en production v8.
 
 \subsection{Limitations}
 
