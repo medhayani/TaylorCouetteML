@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ipynb_checkpoints/
+
+# venvs
+.venv/
+venv/
+env/
+!code/models/diffusion_policy_marl/env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Trained weights for the heavy ensemble baseline (downloaded from
+# Kaggle on demand, NOT stored in git). The lightweight ensemble
+# shipped with the repository lives under models_trained/.
+data/runs/
+runs/
+checkpoints/
+# Allow only the .pt files under models_trained/
+*.pth
+*.ckpt
+
+# Heavy intermediates
+*.h5
+
+# LaTeX artefacts (in case anyone re-introduces tex sources)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc

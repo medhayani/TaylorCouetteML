@@ -1,0 +1,170 @@
+# PRO architectures: 5–10× more capacity than the originals.
+# All targets pure PyTorch; ready to retrain.
+
+# ---------- NEPTUNE_PRO (replaces SSST role) ----------
+neptune_pro:
+  context:
+    in_dim: 24            # log10E + 23 features
+    d_model: 256          # was 128
+    num_isab_layers: 5    # was 3
+    num_inducing_points: 32
+    num_heads: 8
+    dropout: 0.1
+  operator:
+    in_dim: 1
+    d_model: 384          # was 192
+    num_blocks: 8         # was 6
+    num_heads: 12
+    num_fourier_modes: 32 # was 16
+    fourier_features: 64  # was 32
+    dropout: 0.1
+  diffusion:
+    num_timesteps: 1000   # was 200
+    inference:
+      method: "ddim"
+      num_steps: 50
+      eta: 0.0
+  losses:
+    diffusion: 1.0
+    switch:    0.6
+    pino:      0.3
+    spectral:  0.05
+  ensemble:
+    num_members: 5
+  training:
+    epochs: 200           # was 80
+    batch_size: 8
+    learning_rate: 1.5e-4
+    weight_decay: 1.0e-4
+    grad_clip_norm: 1.0
+  expected_params_per_member: "~25M"
+
+# ---------- HYDRA_PRO (replaces SARL/MARL roles) ----------
+hydra_pro:
+  num_agents: 7           # was 5 — added Trend + Asymmetry
+  agents:
+    detector:    {action_dim: 3,  hidden_dim: 512}
+    shape:       {action_dim: 4,  hidden_dim: 512}
+    geometry:    {action_dim: 5,  hidden_dim: 512}
+    smoothness:  {action_dim: 49, hidden_dim: 512}
+    trend:       {action_dim: 3,  hidden_dim: 512}    # NEW: global trend (slope, intercept, curvature)
+    asymmetry:   {action_dim: 4,  hidden_dim: 512}    # NEW: left/right balance
+    validator:   {action_dim: 7,  hidden_dim: 256}    # 7 gates instead of 5
+  manager:
+    enabled: true
+    subgoal_dim: 64       # was 32
+    high_level_horizon: 5
+    hidden_dim: 512
+  communication:
+    num_rounds: 4         # was 3
+    d_message: 256
+    num_heads: 8
+    topology: "complete"
+  critic:
+    d_model: 384          # was 256
+    num_layers: 8         # was 6
+    num_heads: 12
+    dropout: 0.1
+  diffusion_policy:
+    num_timesteps: 200    # was 100
+    inference_steps: 30   # was 20
+    advantage_weight: 3.0
+  algorithms:
+    iql:    {expectile_tau: 0.7, discount: 0.99, target_update_rate: 0.005}
+    mappo:  {clip_epsilon: 0.2, entropy_coef: 0.01, value_coef: 0.5, gae_lambda: 0.95}
+    coma:   {counterfactual_samples: 32}
+    madt:   {context_length: 30}
+  pbt:
+    enabled: true
+    population_size: 8
+  phases:
+    madt_pretrain:    {epochs: 60,    lr: 3.0e-4}
+    iql_critic:       {epochs: 80,    lr: 3.0e-4}
+    mappo_online:     {steps: 4000,   lr: 1.0e-4}
+    pbt_finetune:     {steps: 2000}
+  expected_params: "~40M"
+
+# ---------- SSST_PRO (PyTorch port of code4 SSST, scaled up) ----------
+ssst_pro:
+  d_model: 384            # was 224
+  num_blocks: 10          # was 6
+  num_heads: 12
+  attention_key_dim: 48
+  trunk_kernel: 5
+  num_modes: 8            # was 5
+  num_experts: 16         # was 10
+  top_k_experts: 4        # was 3
+  gate_hidden: 256
+  ff_mult: 4
+  expert_kernel_sizes: [3, 5, 7, 9, 11, 13, 15, 5, 7, 9, 11, 5, 7, 9, 11, 13]
+  expert_dilations:    [1, 1, 2, 2, 3, 4, 6, 8, 3, 5, 7, 2, 4, 6, 9, 12]
+  dropout: 0.10
+  losses:
+    data: 1.0
+    switch: 0.6
+    grad: 0.95
+    curv: 0.65
+    extrema: 0.18
+    spectral: 0.05
+  training:
+    epochs: 200
+    batch_size: 8
+    learning_rate: 1.8e-4
+  expected_params: "~80M"
+
+# ---------- SARL_PRO (PyTorch SAC, scaled up) ----------
+sarl_pro:
+  feature_extractor:
+    seq_hidden: 256       # was 128
+    seq_out: 384          # was 192
+    static_hidden: 256
+    fusion_hidden: 512    # was 256
+    num_attn_heads: 8
+    use_attention_pooling: true
+    dropout: 0.05
+  actor_layers: [512, 512, 256]    # was [256, 256]
+  critic_layers: [512, 512, 256]
+  sac:
+    learning_rate: 4.0e-5
+    buffer_size: 360000   # was 180000
+    learning_starts: 12000
+    batch_size: 512       # was 256
+    tau: 0.005
+    gamma: 0.99
+    train_freq: 2
+    gradient_steps: 4     # was 2
+    ent_coef: "auto_0.1"
+  timesteps: 1500000      # was 800k
+  n_envs: 8
+  expected_params: "~30M"
+
+# ---------- MARL_PRO (3 agents PyTorch SAC, scaled up + cross-agent attention) ----------
+marl_pro:
+  num_agents: 3           # localizer, shape, geometry
+  agent_features:
+    seq_hidden: 256
+    static_hidden: 256
+    fusion_hidden: 512
+    num_attn_heads: 8
+  actor_layers:  [768, 768, 384]
+  critic_layers: [768, 768, 384]
+  cross_agent_attention:
+    enabled: true
+    num_rounds: 3
+    num_heads: 8
+  sac:
+    learning_rate: 5e-5
+    buffer_size: 360000
+    learning_starts: 10000
+    batch_size: 512
+    gamma: 0.99
+    tau: 0.005
+    ent_coef: "auto_0.1"
+  timesteps_per_agent:
+    localizer: 500000     # was 250k
+    shape:     700000     # was 350k
+    geometry:  900000     # was 450k
+  obs_clip: 5.0
+  reward_clip: 12.0
+  hard_sampling: true
+  expected_params: "~70M"
