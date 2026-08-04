@@ -5,8 +5,8 @@
 
 Three neural-network surrogates for the linear-stability marginal
 curve $T_a(k,E)$ of an oscillatory Taylor-Couette flow in an
-upper-convected Maxwell (UCM) fluid with counter-oscillating
-cylinders.
+upper-convected Maxwell (UCM) fluid with co-oscillating cylinders
+(the two cylinders oscillate in phase about a zero mean).
 
 ---
 
@@ -51,7 +51,7 @@ TaylorCouetteML/
 ```
 
 Total repository size: ~460 MB (code + data + 15 trained checkpoints).
-The 29 supervised surrogates of the ensemble baseline and the MARL
+The 34 supervised surrogates of the ensemble baseline and the MARL
 refiner weights (~5 GB combined) are **not** stored in git -- they
 live on Kaggle and can be fetched on demand (see below).
 
@@ -62,19 +62,35 @@ live on Kaggle and can be fetched on demand (see below).
 | Name     | What it does                                         | Inference cost |
 |----------|------------------------------------------------------|----------------|
 | **CNP**  | Conditional Neural Process. Zero-shot from the 23 descriptors, OR few-shot if you provide a few exact $(k_c,T_{a,c})$ points as context. | 1 forward pass |
-| **DIST** | Distilled Spectral Transformer. Single student model that reproduces the median of 29 supervised surrogates. | 1 forward pass (~30x faster than the explicit median) |
+| **DIST** | Distilled Spectral Transformer. Single student model that reproduces the median of its 29-model teacher pool (precision V2: 12, CSON: 5, CNP: 5, STAR: 7). | 1 forward pass (~30x faster than the explicit median) |
 | **RL-REF** | Reinforcement-learning refiner: 5 SARL seeds + 5 MARL seeds, weighted-mean aggregation over the SARL ensemble. Specialises in the cusp/switch zone. | ~6 forward passes |
 
 Final performance on the test split (107 branches, 101 points each):
 
 | Model                          | MAE_norm | RMSE_norm | R^2    |
 |--------------------------------|----------|-----------|--------|
-| Ensemble median of 29          | 0.009    | 0.016     | 0.996  |
+| Ensemble median of 34 (MED-NN) | 0.009    | 0.016     | 0.996  |
 | Pointwise oracle (upper bound) | 0.004    | 0.010     | 0.999  |
 | CNP zero-shot                  | 0.011    | 0.018     | 0.994  |
 | CNP few-shot (N_c = 4)         | 0.004    | 0.010     | 0.999  |
 | DIST                           | 0.010    | 0.017     | 0.995  |
 | RL-REF (refiner ensemble)      | 0.008    | 0.015     | 0.996  |
+
+**Ensemble composition.** The full supervised ensemble counts **34**
+checkpoints: precision_v2 (12) + cson_v1 (5) + cnp_v1 (5) + star_v1
+(7) + distil_v1 (3) + ssst_v2 (1) + neptune_v2 (1). Its point-wise
+median is the MED-NN baseline and the base prediction of the RL
+refiner. The DIST student was distilled from the median of the
+29-model teacher pool (precision_v2 + cson_v1 + cnp_v1 + star_v1),
+i.e. the 34 minus the distilled students themselves and the two
+single-seed models.
+
+**Work in progress.** A light classification head on the shared
+trunk (two dense layers, $d_\text{m}\to64\to4$) returning the
+temporal nature of the dominant mode (harmonic / quasi-periodic /
+subharmonic) together with a reversing flag, trained by
+cross-entropy on the Floquet-multiplier labels, is being integrated
+into this repository.
 
 ---
 
@@ -114,7 +130,9 @@ python predict.py --E 0.001 --csv prediction.csv
 The script automatically falls back to the closest available $E$
 value if the exact one is not in the dataset, overlays the Floquet
 ground-truth points when present, and runs on CPU (no GPU needed).
-Inference time on a typical laptop: <5 seconds.
+End-to-end script time on a typical laptop: <5 seconds (model
+loading and figure rendering included; the network forward pass
+itself takes a few milliseconds).
 
 ### Critical-curve sweep over E
 
@@ -160,7 +178,7 @@ outputs).
 | Folder | Kernel title | Trains |
 |--------|--------------|--------|
 | `cnp_v2/`       | TCML CNP v2 zero-shot dominant     | CNP zero-shot dominant, 5 seeds              |
-| `distil_v1/`    | TCML DISTIL STAR v1                | DIST (distillation of 29-surrogate median), 5 seeds |
+| `distil_v1/`    | TCML DISTIL STAR v1                | DIST (distillation of the 29-teacher median), 5 seeds |
 | `rl_v2/`        | TCML RL v2 SARL + MARL 1500ep      | SARL+MARL ensemble used in production        |
 | `cnp_v1/`       | TCML CNP v1 1200ep 5seeds          | CNP-TC, 5 seeds                              |
 | `cson_v1/`      | TCML CSON v1 1000ep 5seeds         | CSON, 5 seeds                                |
@@ -206,7 +224,7 @@ Kaggle datasets and kernel outputs.
 | CNP weights | kernel `tcml-cnp-v2-zero-shot-dominant` | 5 seeds best.pt, ~31 MB each |
 | DIST weights | kernel `tcml-distil-star-v1` | 5 seeds best.pt, ~55 MB each |
 | RL-REF weights | kernel `tcml-rl-v2-sarl-marl-1500ep-5seeds` | 5 SARL + 5 MARL seeds, total ~630 MB |
-| 29 supervised surrogates | kernels `tcml-precision-v2-ensemble`, `tcml-cson-v1-1000ep-5seeds`, `tcml-cnp-v1-1200ep-5seeds`, `tcml-star-v1-1500ep-7seeds`, `tcml-distil-star-v1`, `tcml-ssst-v2-1000ep`, `tcml-neptune-v2-1000ep-m1` | base models for the ensemble median |
+| 34 supervised surrogates | kernels `tcml-precision-v2-ensemble`, `tcml-cson-v1-1000ep-5seeds`, `tcml-cnp-v1-1200ep-5seeds`, `tcml-star-v1-1500ep-7seeds`, `tcml-distil-star-v1`, `tcml-ssst-v2-1000ep`, `tcml-neptune-v2-1000ep-m1` | base models for the ensemble median |
 
 ### Re-train a model on Kaggle
 
