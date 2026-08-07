@@ -1,0 +1,17 @@
+{
+  "id": "hayanichoujaamohamed/tcml-distil-star-v2",
+  "title": "TCML DISTIL STAR v2 34-median 3000ep",
+  "code_file": "run.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [
+    "hayanichoujaamohamed/tcml-aux",
+    "hayanichoujaamohamed/tcml-code",
+    "hayanichoujaamohamed/tcml-median34"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

@@ -19,11 +19,13 @@ TaylorCouetteML/
 |
 |-- kaggle_notebooks/                    <- ready-to-push Kaggle kernels
 |   |-- cnp_v2/                              (CNP training)
-|   |-- distil_v1/                           (DIST training)
+|   |-- distil_v1/                           (DIST v1 training)
+|   |-- distil_v2/                           (DIST v2: 34-model median, 3000 ep)
 |   |-- rl_v2/                               (SARL + MARL ensemble training)
 |   `-- ... (12 more for the supervised baselines)
 |
 |-- code/                                <- everything you need to run
+|   |-- precompute_ensemble_targets_34.py   (34-model median targets, DIST v2 teacher)
 |   |-- predict_3models_v8_rl_aug.py        (main figure renderer)
 |   |-- make_panel12_figure.py              (12-panel summary figure)
 |   |-- eval_rl_aggregations.py             (benchmark 9 RL aggregations)
@@ -43,7 +45,8 @@ TaylorCouetteML/
 |   |-- combined_data.csv                   (~145k Floquet triplets (T_a,k,E))
 |   |-- branch_functional_descriptors.csv   (23 descriptors / 720 branches)
 |   |-- model_profile_level_dataset.csv     (normalized 720x101 dataset)
-|   |-- ensemble_median_targets.npz         (29-surrogate median targets)
+|   |-- ensemble_median_targets.npz         (29-surrogate median targets, DIST v1)
+|   |-- ensemble_median_targets_34.npz      (34-surrogate median targets, DIST v2)
 |   |-- rl_windows/                         (switch-window RL dataset, D5 base)
 |
 `-- figures/                             <- 47 prediction figures Ta(k)
@@ -80,10 +83,15 @@ Final performance on the test split (107 branches, 101 points each):
 checkpoints: precision_v2 (12) + cson_v1 (5) + cnp_v1 (5) + star_v1
 (7) + distil_v1 (3) + ssst_v2 (1) + neptune_v2 (1). Its point-wise
 median is the MED-NN baseline and the base prediction of the RL
-refiner. The DIST student was distilled from the median of the
+refiner. The DIST v1 student was distilled from the median of the
 29-model teacher pool (precision_v2 + cson_v1 + cnp_v1 + star_v1),
 i.e. the 34 minus the distilled students themselves and the two
-single-seed models.
+single-seed models. The DIST v2 student (kernel `distil_v2/`) is
+distilled directly from the median of the full 34-model ensemble,
+precomputed by `code/precompute_ensemble_targets_34.py` and shipped
+as `data/ensemble_median_targets_34.npz` (Kaggle dataset
+`tcml-median34`), with a high-epoch schedule (3000 epochs per seed,
+5 seeds).
 
 **Work in progress.** A light classification head on the shared
 trunk (two dense layers, $d_\text{m}\to64\to4$) returning the
@@ -178,7 +186,8 @@ outputs).
 | Folder | Kernel title | Trains |
 |--------|--------------|--------|
 | `cnp_v2/`       | TCML CNP v2 zero-shot dominant     | CNP zero-shot dominant, 5 seeds              |
-| `distil_v1/`    | TCML DISTIL STAR v1                | DIST (distillation of the 29-teacher median), 5 seeds |
+| `distil_v1/`    | TCML DISTIL STAR v1                | DIST v1 (distillation of the 29-teacher median), 5 seeds |
+| `distil_v2/`    | TCML DISTIL STAR v2 34-median 3000ep | DIST v2 (distillation of the 34-model median), 5 seeds, 3000 ep |
 | `rl_v2/`        | TCML RL v2 SARL + MARL 1500ep      | SARL+MARL ensemble used in production        |
 | `cnp_v1/`       | TCML CNP v1 1200ep 5seeds          | CNP-TC, 5 seeds                              |
 | `cson_v1/`      | TCML CSON v1 1000ep 5seeds         | CSON, 5 seeds                                |
@@ -220,6 +229,7 @@ Kaggle datasets and kernel outputs.
 | Asset | Kaggle path | Content |
 |-------|-------------|---------|
 | Auxiliary data | `hayanichoujaamohamed/tcml-aux` | `combined_data.csv`, descriptors, ensemble median, RL windows (D5 and MED-NN bases) |
+| 34-model median targets | `hayanichoujaamohamed/tcml-median34` | `ensemble_median_targets_34.npz`, teacher target of DIST v2 |
 | Source code | `hayanichoujaamohamed/tcml-code` | this repository, packaged as a dataset for Kaggle notebooks |
 | CNP weights | kernel `tcml-cnp-v2-zero-shot-dominant` | 5 seeds best.pt, ~31 MB each |
 | DIST weights | kernel `tcml-distil-star-v1` | 5 seeds best.pt, ~55 MB each |
