@@ -39,6 +39,8 @@ TaylorCouetteML/
 |-- models_trained/                      <- shipped trained weights
 |   |-- cnp/seed_42..46/best.pt             (CNP, 5 seeds, ~31 MB each)
 |   |-- dist/seed_42..46/best.pt            (DIST, 5 seeds, ~55 MB each)
+|   |-- dist_v2/seed_42..46/best.pt         (DIST v2, 5 seeds, ~55 MB each,
+|   |                                        with history.json per seed)
 |   `-- sarl/seed_42..46/best.pt            (SARL refiner, 5 seeds, ~20 MB each)
 |
 |-- data/                                <- input data shipped with the repo
@@ -91,7 +93,12 @@ distilled directly from the median of the full 34-model ensemble,
 precomputed by `code/precompute_ensemble_targets_34.py` and shipped
 as `data/ensemble_median_targets_34.npz` (Kaggle dataset
 `tcml-median34`), with a high-epoch schedule (3000 epochs per seed,
-5 seeds).
+5 seeds). Its weights are shipped in
+`models_trained/dist_v2/`, together with the per-seed
+`history.json` training logs; this v2 student is the distilled
+spectral transformer described in the Physics of Fluids
+manuscript, while `models_trained/dist/` keeps the v1 weights
+used inside the 34-checkpoint ensemble.
 
 **Work in progress.** A light classification head on the shared
 trunk (two dense layers, $d_\text{m}\to64\to4$) returning the
