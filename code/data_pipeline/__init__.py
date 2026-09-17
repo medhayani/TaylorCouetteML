@@ -1,1 +1,1 @@
-"""Data pipeline (Steps A–F). Reuses the well-tested logic from code4."""
+"""Datasets read by the training and evaluation scripts."""

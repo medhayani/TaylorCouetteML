@@ -1,0 +1,8 @@
+{
+ "n": 29,
+ "CNP_lf_block_MAPE_Ta": 12.232176211461425,
+ "CNP_lf_block_MAE_k": 3.3937931034482753,
+ "CNP_lf_block_curve": 9.523701054597522,
+ "PCHIP1D_block_MAPE_Ta": 10.362138854441385,
+ "PCHIP1D_block_MAE_k": 3.307780792323061
+}

@@ -1,0 +1,15 @@
+{
+ "id": "YOUR-KAGGLE-USERNAME/tcml-cson-lf",
+ "title": "TCML CSON teachers (leak-free)",
+ "code_file": "run.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": "true",
+ "enable_gpu": "true",
+ "enable_internet": "true",
+ "dataset_sources": [
+  "YOUR-KAGGLE-USERNAME/taylorcouetteml"
+ ],
+ "competition_sources": [],
+ "kernel_sources": []
+}

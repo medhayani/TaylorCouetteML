@@ -4,7 +4,7 @@ A robust neural surrogate for the marginal stability curve T_a(k) of an
 oscillatory Taylor-Couette flow, parameterised by 23 functional descriptors
 of each branch (including log10 E).
 
-Design rationale (vs SSST / NEPTUNE which overshoot or oscillate at the
+Design rationale (against the spectral baselines that overshoot or oscillate at the
 domain boundaries):
 
 1. **Spectral decoder.** The curve is represented on a truncated Chebyshev
@@ -34,7 +34,7 @@ domain boundaries):
 
    pushes high-order coefficients towards zero, which directly suppresses
    the parasitic high-frequency oscillations seen in the diffusion-based
-   NEPTUNE surrogate.
+   other spectral surrogates.
 
 The model is small enough (~2-3M parameters at the default settings) to
 train in well under 1 hour on a single Kaggle P100 GPU.

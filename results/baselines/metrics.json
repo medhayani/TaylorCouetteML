@@ -1,0 +1,23 @@
+{
+ "PCHIP-1D": {
+  "n_test_E": 64,
+  "MAPE_Ta": 0.16634952780819767,
+  "MAE_k": 0.2991597672859538,
+  "curve_MAPE": NaN,
+  "curve_coverage": NaN
+ },
+ "PCHIP-2D": {
+  "n_test_E": 64,
+  "MAPE_Ta": 0.19843737309582288,
+  "MAE_k": 0.03125,
+  "curve_MAPE": 0.3653147225354915,
+  "curve_coverage": 1.0
+ },
+ "Branch-interp": {
+  "n_test_E": 64,
+  "MAPE_Ta": 0.32545428909670665,
+  "MAE_k": 0.2828125,
+  "curve_MAPE": 0.45136280270468887,
+  "curve_coverage": 0.8377036659877799
+ }
+}

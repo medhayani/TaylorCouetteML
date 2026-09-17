@@ -1,0 +1,487 @@
+{
+ "information": {
+  "log10E": "varie (calcule par les scripts)",
+  "branch_order_norm": "absent du fichier : 0 pour les modeles",
+  "width_k": "varie (171 valeurs)",
+  "width_asymmetry": "varie (407 valeurs)",
+  "rise_asymmetry": "varie (702 valeurs)",
+  "slope_left_local": "varie (719 valeurs)",
+  "slope_right_local": "varie (720 valeurs)",
+  "global_slope": "varie (720 valeurs)",
+  "curvature_at_min": "varie (699 valeurs)",
+  "roughness_rmse": "varie (720 valeurs)",
+  "normalized_arc_length": "varie (720 valeurs)",
+  "has_switch_left": "entierement NaN : 0 pour les modeles",
+  "has_switch_right": "entierement NaN : 0 pour les modeles",
+  "mean_abs_curvature": "varie (720 valeurs)",
+  "amplitude": "varie (720 valeurs)",
+  "n_branches": "absent du fichier : 0 pour les modeles",
+  "is_first_branch": "absent du fichier : 0 pour les modeles",
+  "is_last_branch": "absent du fichier : 0 pour les modeles",
+  "left_width": "varie (210 valeurs)",
+  "right_width": "varie (181 valeurs)",
+  "left_rise": "varie (713 valeurs)",
+  "right_rise": "varie (706 valeurs)",
+  "mean_abs_slope": "varie (720 valeurs)"
+ },
+ "informative": [
+  "log10E",
+  "width_k",
+  "width_asymmetry",
+  "rise_asymmetry",
+  "slope_left_local",
+  "slope_right_local",
+  "global_slope",
+  "curvature_at_min",
+  "roughness_rmse",
+  "normalized_arc_length",
+  "mean_abs_curvature",
+  "amplitude",
+  "left_width",
+  "right_width",
+  "left_rise",
+  "right_rise",
+  "mean_abs_slope"
+ ],
+ "redundant_pairs_abs_rho_ge_0.9": [
+  [
+   "normalized_arc_length",
+   "mean_abs_slope",
+   0.9982879202928414
+  ],
+  [
+   "roughness_rmse",
+   "left_rise",
+   0.988728908981068
+  ],
+  [
+   "roughness_rmse",
+   "amplitude",
+   0.9868310132853084
+  ],
+  [
+   "amplitude",
+   "left_rise",
+   0.985512367594905
+  ],
+  [
+   "slope_left_local",
+   "curvature_at_min",
+   -0.9344243530409907
+  ],
+  [
+   "slope_right_local",
+   "curvature_at_min",
+   0.907352912139178
+  ]
+ ],
+ "models": {
+  "CNP zero-shot": {
+   "base": [
+    1.5304613531181785,
+    1.1757408590859506,
+    2.332596028832696
+   ],
+   "groups": {
+    "elasticite (log E)": {
+     "dTa": 10.550037782161214,
+     "dk": 2.2285023786878195,
+     "dcurve": 19.862244341246388,
+     "sd_curve": 1.7993012763510339,
+     "constant": false
+    },
+    "etendue et position": {
+     "dTa": 0.04773802209136733,
+     "dk": 0.027883956200677806,
+     "dcurve": 0.09715523236216539,
+     "sd_curve": 0.016977119218424302,
+     "constant": false
+    },
+    "hauteurs": {
+     "dTa": 0.12556892415445392,
+     "dk": 0.04729494826170115,
+     "dcurve": 0.044211261088954415,
+     "sd_curve": 0.024944817378438438,
+     "constant": false
+    },
+    "pentes": {
+     "dTa": 0.04407154928560617,
+     "dk": 0.01659742857131743,
+     "dcurve": 0.03350793085573596,
+     "sd_curve": 0.0179165442944631,
+     "constant": false
+    },
+    "courbure": {
+     "dTa": 0.039747037177679266,
+     "dk": 0.023749999999999983,
+     "dcurve": 0.016733537139365318,
+     "sd_curve": 0.007472600764242569,
+     "constant": false
+    },
+    "complexite de forme": {
+     "dTa": 0.04973026419056463,
+     "dk": -0.0030714491658659247,
+     "dcurve": 0.020745750185810596,
+     "sd_curve": 0.007509609695055969,
+     "constant": false
+    },
+    "structure des modes (6)": {
+     "dTa": 0.0,
+     "dk": 0.0,
+     "dcurve": 0.0,
+     "sd_curve": 0.0,
+     "constant": true
+    },
+    "ancrages (k_L,k_R,Ta_min,Ta_max)": {
+     "dTa": 9.899171929399694,
+     "dk": 2.061189991758309,
+     "dcurve": 17.883516839362297,
+     "sd_curve": 2.8957242885500323,
+     "constant": false
+    },
+    "tous les descripteurs geometriques (16)": {
+     "dTa": 0.5593604903853394,
+     "dk": 0.107006622976099,
+     "dcurve": 0.44965525289068153,
+     "sd_curve": 0.04462124902154195,
+     "constant": false
+    }
+   },
+   "single": {
+    "log10E": {
+     "dTa": 9.703426449544422,
+     "dk": 2.13711748962522,
+     "dcurve": 17.60763579743468,
+     "sd_curve": 1.5471397087550365
+    },
+    "width_k": {
+     "dTa": 0.00042851815026227297,
+     "dk": 0.0026964998635754522,
+     "dcurve": 0.010784228301971973,
+     "sd_curve": 0.009334067639837263
+    },
+    "width_asymmetry": {
+     "dTa": 0.03217159513238984,
+     "dk": 0.020750000000000046,
+     "dcurve": 0.03778520162887533,
+     "sd_curve": 0.008526947669553071
+    },
+    "rise_asymmetry": {
+     "dTa": 0.025510320406593328,
+     "dk": 0.036274299592925795,
+     "dcurve": 0.01742532270779762,
+     "sd_curve": 0.006020663701351043
+    },
+    "slope_left_local": {
+     "dTa": 0.016119247870697444,
+     "dk": -0.000825165987133151,
+     "dcurve": 0.01637743802455501,
+     "sd_curve": 0.002319240284257396
+    },
+    "slope_right_local": {
+     "dTa": 0.007614086569213733,
+     "dk": 0.001979166666666643,
+     "dcurve": 0.0034402453413805802,
+     "sd_curve": 0.002220481313611781
+    },
+    "global_slope": {
+     "dTa": 0.026683545229003142,
+     "dk": 0.005572916666666779,
+     "dcurve": 0.03372218468363478,
+     "sd_curve": 0.015868906770119495
+    },
+    "curvature_at_min": {
+     "dTa": 0.06136224416778532,
+     "dk": 0.010631130952195663,
+     "dcurve": 0.022908102730720525,
+     "sd_curve": 0.019603823689041722
+    },
+    "roughness_rmse": {
+     "dTa": 0.016233917105162494,
+     "dk": 0.012864583333333327,
+     "dcurve": 0.003820390270252864,
+     "sd_curve": 0.0009396352162156295
+    },
+    "normalized_arc_length": {
+     "dTa": 0.03542572045124692,
+     "dk": 0.011875000000000005,
+     "dcurve": 0.0028210573285936866,
+     "sd_curve": 0.010369703629002164
+    },
+    "mean_abs_curvature": {
+     "dTa": 0.030693911964126297,
+     "dk": 0.0,
+     "dcurve": 0.0019359756547136324,
+     "sd_curve": 0.002775548518280694
+    },
+    "amplitude": {
+     "dTa": 0.019466171545207505,
+     "dk": 0.012403091123167842,
+     "dcurve": -0.0041764725086233705,
+     "sd_curve": 0.006323196824508104
+    },
+    "left_width": {
+     "dTa": -0.018953541528400637,
+     "dk": 0.00791666666666672,
+     "dcurve": 0.0008775523525395753,
+     "sd_curve": 0.001694635357088709
+    },
+    "right_width": {
+     "dTa": 0.03456081348749729,
+     "dk": 0.0009739583333333949,
+     "dcurve": 0.030260835421353754,
+     "sd_curve": 0.0062690271289499765
+    },
+    "left_rise": {
+     "dTa": 0.016078121080040326,
+     "dk": 0.01163399986357542,
+     "dcurve": -0.0005310426135056723,
+     "sd_curve": 0.0051109774677787195
+    },
+    "right_rise": {
+     "dTa": 0.06109893761695543,
+     "dk": 0.001979166666666643,
+     "dcurve": 0.019303367062134758,
+     "sd_curve": 0.007368772359541684
+    },
+    "mean_abs_slope": {
+     "dTa": 0.027476838898139306,
+     "dk": 0.013111424456501078,
+     "dcurve": 0.009539456657376988,
+     "sd_curve": 0.0018682192407164684
+    },
+    "__a0__": {
+     "dTa": 9.280103450504901,
+     "dk": 1.32999485112866,
+     "dcurve": 12.157256069599827,
+     "sd_curve": 3.549371796031094
+    },
+    "__a1__": {
+     "dTa": 0.08738115568343763,
+     "dk": 0.39734138375691863,
+     "dcurve": 2.3343020290357015,
+     "sd_curve": 0.014720358834686755
+    },
+    "__a2__": {
+     "dTa": 0.45986702879330527,
+     "dk": 0.1391935090817132,
+     "dcurve": 0.947475182356936,
+     "sd_curve": 0.14491676478666873
+    },
+    "__a3__": {
+     "dTa": -0.01170246152389498,
+     "dk": 0.12732572959673308,
+     "dcurve": 0.5008447899518695,
+     "sd_curve": 0.11178484849151726
+    }
+   }
+  },
+  "CNP conditionne": {
+   "base": [
+    1.2889720211416456,
+    0.7113083077586644,
+    1.3838766113058525
+   ],
+   "groups": {
+    "elasticite (log E)": {
+     "dTa": 6.8412828803338614,
+     "dk": 2.1233512379547954,
+     "dcurve": 13.280433913603312,
+     "sd_curve": 0.8985138825833082,
+     "constant": false
+    },
+    "etendue et position": {
+     "dTa": 0.06256666472371908,
+     "dk": 0.02094657094142336,
+     "dcurve": 0.01449897980661743,
+     "sd_curve": 0.009741887898553995,
+     "constant": false
+    },
+    "hauteurs": {
+     "dTa": 0.06368400393845305,
+     "dk": 0.008932709061059651,
+     "dcurve": -0.007147391765264066,
+     "sd_curve": 0.008656890908941341,
+     "constant": false
+    },
+    "pentes": {
+     "dTa": 0.02157980214767945,
+     "dk": -0.0029687500000000534,
+     "dcurve": -0.006066189336234285,
+     "sd_curve": 0.005830573882553699,
+     "constant": false
+    },
+    "courbure": {
+     "dTa": 0.013710877002194487,
+     "dk": 0.0009906249999999562,
+     "dcurve": 0.015999476429685754,
+     "sd_curve": 0.007964763455363701,
+     "constant": false
+    },
+    "complexite de forme": {
+     "dTa": 0.017835292962901893,
+     "dk": -0.006496591415099373,
+     "dcurve": -0.014785699849930011,
+     "sd_curve": 0.005755803514589831,
+     "constant": false
+    },
+    "structure des modes (6)": {
+     "dTa": 0.0,
+     "dk": 0.0,
+     "dcurve": 0.0,
+     "sd_curve": 0.0,
+     "constant": true
+    },
+    "ancrages (k_L,k_R,Ta_min,Ta_max)": {
+     "dTa": 1.9061161739813008,
+     "dk": 0.4697590802205351,
+     "dcurve": 2.4059795907468198,
+     "sd_curve": 0.43594205385956764,
+     "constant": false
+    },
+    "contexte (courbe des voisins)": {
+     "dTa": 11.446991599513222,
+     "dk": 2.035695018771515,
+     "dcurve": 20.91929900019108,
+     "sd_curve": 2.723134890783663,
+     "constant": false
+    },
+    "tous les descripteurs geometriques (16)": {
+     "dTa": 0.2855113070570161,
+     "dk": 0.04737884305153885,
+     "dcurve": 0.09819990046026143,
+     "sd_curve": 0.023971254301649796,
+     "constant": false
+    }
+   },
+   "single": {
+    "log10E": {
+     "dTa": 6.390384919738135,
+     "dk": 2.0929417031625404,
+     "dcurve": 12.237459350891944,
+     "sd_curve": 0.36770120526152433
+    },
+    "width_k": {
+     "dTa": 0.010498509684232049,
+     "dk": -0.0009895833333333586,
+     "dcurve": -0.02189129869798978,
+     "sd_curve": 0.0024133386112623278
+    },
+    "width_asymmetry": {
+     "dTa": 0.0240741713700392,
+     "dk": 0.0054045098887175085,
+     "dcurve": 0.035476583638646586,
+     "sd_curve": 0.006371199412443328
+    },
+    "rise_asymmetry": {
+     "dTa": 0.009428073781145926,
+     "dk": 0.0,
+     "dcurve": 0.018641703978118596,
+     "sd_curve": 0.003161321692424335
+    },
+    "slope_left_local": {
+     "dTa": 0.012220678420175343,
+     "dk": -0.008518016373748641,
+     "dcurve": -0.001376755381310953,
+     "sd_curve": 0.004662030259934165
+    },
+    "slope_right_local": {
+     "dTa": 0.0009128746723196338,
+     "dk": 0.0,
+     "dcurve": 0.005410505981695272,
+     "sd_curve": 0.0006854578661252393
+    },
+    "global_slope": {
+     "dTa": 0.02717297511122078,
+     "dk": 0.025784273647141087,
+     "dcurve": 0.003466267968389299,
+     "sd_curve": 0.011760475869995414
+    },
+    "curvature_at_min": {
+     "dTa": 0.02629619246384392,
+     "dk": -0.0049479166666667185,
+     "dcurve": 0.022355013042181977,
+     "sd_curve": 0.02220352401559996
+    },
+    "roughness_rmse": {
+     "dTa": 0.010936002050574878,
+     "dk": 0.003958333333333286,
+     "dcurve": -0.020929710092916148,
+     "sd_curve": 0.0013499076394024225
+    },
+    "normalized_arc_length": {
+     "dTa": 0.007013120989448174,
+     "dk": 0.001979166666666643,
+     "dcurve": 0.001744472801974058,
+     "sd_curve": 0.0033907556326261755
+    },
+    "mean_abs_curvature": {
+     "dTa": 0.00690454750849856,
+     "dk": 0.0029687499999999276,
+     "dcurve": 0.006242747346199895,
+     "sd_curve": 0.002336438516586919
+    },
+    "amplitude": {
+     "dTa": 0.00989760855702193,
+     "dk": 0.0029687499999999645,
+     "dcurve": -0.01769528384167633,
+     "sd_curve": 0.0013805756912615129
+    },
+    "left_width": {
+     "dTa": -0.0031832154385684763,
+     "dk": 0.0,
+     "dcurve": -0.027998773975673002,
+     "sd_curve": 0.004547641555964926
+    },
+    "right_width": {
+     "dTa": 0.025913958784153774,
+     "dk": -0.00197916666666668,
+     "dcurve": -0.002145342866475497,
+     "sd_curve": 0.002382549879262758
+    },
+    "left_rise": {
+     "dTa": 0.010360142911180962,
+     "dk": -3.700743415417188e-17,
+     "dcurve": -0.023110867858527156,
+     "sd_curve": 0.001915559241868721
+    },
+    "right_rise": {
+     "dTa": 0.030394517886959127,
+     "dk": -0.0012708333333333692,
+     "dcurve": 0.01469756670898222,
+     "sd_curve": 0.004505497258683082
+    },
+    "mean_abs_slope": {
+     "dTa": 0.005992677096405015,
+     "dk": 0.0002891156610266658,
+     "dcurve": -0.001203518171303782,
+     "sd_curve": 0.002445016254556662
+    },
+    "__a0__": {
+     "dTa": 1.8438338486589352,
+     "dk": 0.37747456598845336,
+     "dcurve": 1.9083639712440312,
+     "sd_curve": 0.6207280755291723
+    },
+    "__a1__": {
+     "dTa": -0.06778910221418921,
+     "dk": 0.18565591540441875,
+     "dcurve": 0.3848518102739116,
+     "sd_curve": 0.10135725681318412
+    },
+    "__a2__": {
+     "dTa": 0.02282713717550385,
+     "dk": -0.004104048432434171,
+     "dcurve": 0.0297096690787723,
+     "sd_curve": 0.006614970945889026
+    },
+    "__a3__": {
+     "dTa": -0.005930651831344447,
+     "dk": -0.008373275247203585,
+     "dcurve": 0.014783756314738161,
+     "sd_curve": 0.0047802004364437545
+    }
+   }
+  }
+ }
+}
