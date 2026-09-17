@@ -1,0 +1,36 @@
+{
+  "args": {
+    "epochs": 1200,
+    "batch": 16,
+    "lr": 0.0002,
+    "n_seeds": 5,
+    "seed_base": 42,
+    "ctx_noise": 0.03,
+    "max_ctx_points": 32,
+    "p_zero_shot": 0.8,
+    "n_cheb": 64,
+    "n_cos": 32,
+    "d_model": 256,
+    "n_enc_layers": 6,
+    "n_dec_layers": 3,
+    "n_heads": 8,
+    "n_E_freq": 32,
+    "n_k_freq": 16,
+    "dropout": 0.05,
+    "lam_spec": 5e-05,
+    "lam_smooth": 0.0005,
+    "margin": 0.05,
+    "split_csv": "/kaggle/working/TaylorCouetteML/data/split_block.csv",
+    "input_csv": "/kaggle/working/TaylorCouetteML/data/Input/combined_data.csv",
+    "desc_csv": "/kaggle/working/TaylorCouetteML/data/processed/branch_functional_descriptors.csv",
+    "out_root": "/kaggle/working/runs/cnp_leakfree_block"
+  },
+  "diag": {
+    "n_E": 420,
+    "Ta_min_ratio_mean_pct": -4.262275243436771,
+    "Ta_min_ratio_max_pct": 14.377077738228405,
+    "k_min_MAE": 0.41569345632262855,
+    "branch_count_equal_frac": 0.9047619047619048,
+    "same_neighbour_count_frac": 0.8333333333333334
+  }
+}

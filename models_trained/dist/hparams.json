@@ -1,0 +1,11 @@
+{
+ "n_cheb": 64,
+ "n_cos": 32,
+ "d_model": 384,
+ "n_layers": 8,
+ "n_heads": 12,
+ "dropout": 0.05,
+ "n_E_freq": 32,
+ "n_k_freq": 16,
+ "use_spectral_norm": true
+}

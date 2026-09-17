@@ -1,0 +1,42 @@
+{
+  "n_models": 29,
+  "composition": {
+    "precision": 12,
+    "cson": 5,
+    "cnp": 5,
+    "star": 7
+  },
+  "members": [
+    "precision/seed_42/siren",
+    "precision/seed_42/deeponet",
+    "precision/seed_42/chebyshev",
+    "precision/seed_42/envelope_siren",
+    "precision/seed_43/siren",
+    "precision/seed_43/deeponet",
+    "precision/seed_43/chebyshev",
+    "precision/seed_43/envelope_siren",
+    "precision/seed_44/siren",
+    "precision/seed_44/deeponet",
+    "precision/seed_44/chebyshev",
+    "precision/seed_44/envelope_siren",
+    "cson/seed_42",
+    "cson/seed_43",
+    "cson/seed_44",
+    "cson/seed_45",
+    "cson/seed_46",
+    "cnp/seed_42",
+    "cnp/seed_43",
+    "cnp/seed_44",
+    "cnp/seed_45",
+    "cnp/seed_46",
+    "star/seed_42",
+    "star/seed_43",
+    "star/seed_44",
+    "star/seed_45",
+    "star/seed_46",
+    "star/seed_47",
+    "star/seed_48"
+  ],
+  "descriptors": "kaggle_dataset/branch_functional_descriptors_leakfree_all.csv",
+  "ctx_stats": "C:\\Users\\hayan\\Desktop\\Re-Redaction_ArticleIA\\Revision_PoF\\final\\R2_Revision\\analysis\\leakfree\\kaggle_output_teachers\\runs\\precision_lf\\test_branches.npz"
+}

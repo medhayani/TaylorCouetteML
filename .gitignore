@@ -42,3 +42,8 @@ checkpoints/
 *.out
 *.synctex.gz
 *.toc
+
+# local mirrors of the Kaggle layout (not part of the repository)
+data/Input/
+data/processed/
+results/_check_*/

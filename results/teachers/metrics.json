@@ -1,0 +1,66 @@
+{
+ "siren": {
+  "family": "precision_lf",
+  "n_models": 3,
+  "n_test_E": 64,
+  "MAPE_Ta": 2.2627164212209014,
+  "MAE_k": 0.7761027450098199,
+  "curve_MAPE": 2.1009818073436195
+ },
+ "deeponet": {
+  "family": "precision_lf",
+  "n_models": 3,
+  "n_test_E": 64,
+  "MAPE_Ta": 2.387823208312525,
+  "MAE_k": 0.954842432987224,
+  "curve_MAPE": 1.9043210678804674
+ },
+ "chebyshev": {
+  "family": "precision_lf",
+  "n_models": 3,
+  "n_test_E": 64,
+  "MAPE_Ta": 3.029216784462976,
+  "MAE_k": 0.8274671252416744,
+  "curve_MAPE": 2.583676733841571
+ },
+ "envelope_siren": {
+  "family": "precision_lf",
+  "n_models": 3,
+  "n_test_E": 64,
+  "MAPE_Ta": 1.078145808851769,
+  "MAE_k": 0.6678109199696584,
+  "curve_MAPE": 1.836462330657409
+ },
+ "cson": {
+  "family": "cson_lf",
+  "n_models": 5,
+  "n_test_E": 64,
+  "MAPE_Ta": 3.1599586053480344,
+  "MAE_k": 1.4469301912259613,
+  "curve_MAPE": 4.027818781031554
+ },
+ "star": {
+  "family": "star_lf",
+  "n_models": 7,
+  "n_test_E": 64,
+  "MAPE_Ta": 1.6278116992473342,
+  "MAE_k": 1.2068593325646062,
+  "curve_MAPE": 2.4539079119020863
+ },
+ "cnp": {
+  "family": "cnp_leakfree",
+  "n_models": 5,
+  "n_test_E": 64,
+  "MAPE_Ta": 1.3746979318280845,
+  "MAE_k": 1.076006089327998,
+  "curve_MAPE": 2.408335172885792
+ },
+ "median29": {
+  "family": "ensemble",
+  "n_models": 29,
+  "n_test_E": 64,
+  "MAPE_Ta": 1.5479646447801647,
+  "MAE_k": 1.0267369429796265,
+  "curve_MAPE": 1.518616464509948
+ }
+}

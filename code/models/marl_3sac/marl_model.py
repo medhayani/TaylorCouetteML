@@ -1,6 +1,6 @@
 """MARL_PRO — 3-agent SAC system with cross-agent attention message passing.
 
-Replaces code4's "freeze previous agent" sequential paradigm with a
+Replaces the sequential "freeze the previous agent" paradigm with a
 proper joint cooperative architecture:
     1. Each agent has its own SARL_PRO-style feature extractor.
     2. Cross-agent attention exchanges messages over K=3 rounds.

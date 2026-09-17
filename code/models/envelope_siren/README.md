@@ -1,34 +1,33 @@
-# Multi-Mode Envelope SIREN ★
+# Multi-Mode Envelope SIREN
 
-Custom architecture designed for the Floquet stability problem, where
-the marginal curve $T_a(k, E)$ is the lower envelope of several
-mode-specific threshold curves:
+Architecture built for this problem: the marginal curve is the lower envelope
+of several mode-specific threshold curves,
 
-$$T_a(k, E) = \min_{m=1\ldots M}\, T_m(k, E)$$
+    Ta(k, E) = min over m of T_m(k, E),
 
-The hard min naturally produces cusps wherever the argmin index changes,
-which is exactly how a mode crossing manifests in a Floquet eigenvalue
-problem.
+and the hard minimum produces a cusp wherever the winning mode changes, which
+is exactly how a mode exchange appears in the Floquet problem.
 
 ```
-MultiModeEnvelopeSIREN(ctx_dim=24, n_modes=4, hidden=192, depth=5)
-  ctx_enc:   Linear(24, 128) → GELU → Linear → GELU → Linear     (128 latent)
-  modes:     4 × [SineLayer + 5 × (FiLM + SineLayer) + Linear]
-  offsets:   Parameter(4)                                          (symmetry breaking)
-  forward:   stack 4 modes, hard-min, return env
+MultiModeEnvelopeSIREN(ctx_dim=23, n_modes=8, hidden=320, depth=7)
+  ctx_enc:   Linear(23, 128) -> GELU -> Linear -> GELU -> Linear   (128 latent)
+  modes:     8 x [SineLayer + 7 x (FiLM + SineLayer) + Linear]
+  offsets:   Parameter(8)                                          (symmetry breaking)
+  forward:   stack the modes, hard minimum
 ```
 
-| Params | val_MAE | MAE_phys (Input) | Kink-zone MAE | Gain vs legacy |
-|---|---|---|---|---|
-| 1.77 M | 0.011 | **0.549** | **0.785** | ×2.4 |
+It is the best of the 29 teachers taken alone on the held-out elasticities.
 
-Best global / kink-zone trade-off observed across the 720 branches.
+**Trained by** `train/train_precision_ensemble.py` (the four precision
+architectures together, 3 seeds each, kink-weighted MSE), through the
+notebook `kaggle_notebooks/precision_lf/`.
 
-**Train**: `python scripts/train_precision_curves.py` (kink-weighted MSE, ×5).
-**Load**:
-```python
-from models.envelope_siren.model import MultiModeEnvelopeSIREN
-m = MultiModeEnvelopeSIREN(ctx_dim=24, n_modes=4)
-ck = torch.load("checkpoints/envelope_siren/best.pt", weights_only=False)
-m.load_state_dict(ck["state_dict"]); m.eval()
-```
+**Measured** on the 64 held-out elasticities, seed median, leak-free inputs
+(`results/teachers/metrics.json`):
+
+| Ta_c | k_c | marginal curve |
+|---|---|---|
+| 1.08 % | 0.67 | 1.84 % |
+
+**Load**: `from models.envelope_siren.model import MultiModeEnvelopeSIREN`; the weights of the
+29 teachers are not shipped, the notebook retrains them.
