@@ -228,9 +228,9 @@ def panel(ax, E, zoom=None, legend=False, errors=True):
     for kb, _, _ in branches[MODELS[1]][E][1:]:               # junctions between predicted modes
         ax.axvline(kb[0], color="0.8", lw=0.8, ls=":", zorder=1)
     if zoom:
-        ax.set_xlim(*zoom[0]); ax.set_ylim(*zoom[1])
+        ax.set_xlim(0.0, KMAX_PLOT); ax.set_ylim(*zoom[1])   # same k range everywhere, zoom on Ta only
     else:
-        ax.set_xlim(kk[ok][0], kk[ok][-1])
+        ax.set_xlim(0.0, KMAX_PLOT)
     nbp = int((per_E[(per_E.model == "DIST") & (per_E.E == E)].n_branches_pred).iloc[0])
     ax.set_title(f"E = {E:g}   ({nb_true.get(E, '?')} branche(s), {len(kp_)} pic(s))", fontsize=10)
     ax.set_xlabel("k"); ax.set_ylabel("Ta")

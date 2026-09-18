@@ -248,7 +248,10 @@ for ax, E in zip(axs, picks):
     for n in ["truth"] + METHODS:
         c = store[E][n]; ax.plot(kk, c, color=col[n], lw=2.2 if n == "truth" else 1.2, ls="-" if n in ("truth", "CNP-cond") else "--", label=n)
         kp_, hp_ = peaks(c, thr); ax.plot(kp_, hp_, "v" if n == "truth" else "^", color=col[n], ms=9 if n == "truth" else 6)
-    ok = ~np.isnan(store[E]["truth"]); ax.set_xlim(kk[ok][0], kk[ok][-1])
+    ax.set_xlim(0.0, 20.0)                       # the branch table covers k <= 20: same range on every figure
+    m20 = (kk <= 20.0) & ~np.isnan(store[E]["truth"])
+    lo, hi = np.nanmin(store[E]["truth"][m20]), np.nanmax(store[E]["truth"][m20])
+    ax.set_ylim(lo - 0.05 * (hi - lo), hi + 0.05 * (hi - lo))
     ax.set_title(f"E = {E:.4g} (test): {npk[E]} peak(s)"); ax.set_xlabel("k"); ax.set_ylabel("Ta")
 axs[0].legend(fontsize=8); fig.suptitle("Peaks of the marginal curve between modes (markers: detected peaks)"); fig.tight_layout()
 fig.savefig(OUT / "fig_modes_curves.png", dpi=140)
