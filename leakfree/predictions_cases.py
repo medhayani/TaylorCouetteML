@@ -16,7 +16,15 @@ Floquet grid inside the predicted support).
 import json, sys
 from pathlib import Path
 import numpy as np, pandas as pd, torch
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, savgol_filter
+
+SMOOTH_WIN, SMOOTH_ORDER = 9, 3          # light filter inside one branch (101 points)
+
+
+def smooth_branch(y):
+    """Remove the small oscillations of the network inside one branch.
+    Applied per branch, so the cusps between modes are untouched."""
+    return np.clip(savgol_filter(y, SMOOTH_WIN, SMOOTH_ORDER, mode="interp"), 0.0, 1.0)
 
 REPO = Path(__file__).resolve().parents[1]            # repository root
 OUT = REPO / "results/predictions"; OUT.mkdir(parents=True, exist_ok=True)
@@ -146,20 +154,32 @@ def assemble(pieces):
 pred = {"CNP zero-shot": cnp_predict(REPO / "models_trained/cnp"),
         "CNP conditionné": cnp_predict(REPO / "models_trained/cnp_nbr"),
         "DIST": dist_predict(), "RL (médiane + SARL)": rl_predict()}
-curve_on_grid, per_E = {n: {} for n in MODELS}, []
+curve_on_grid, branches, per_E = {n: {} for n in MODELS}, {n: {} for n in MODELS}, []
 for n in MODELS:
     rows, y = pred[n]
     for E, g in rows.groupby("E"):
-        E = R6(E); pieces = [(r.k_left + S * (r.k_right - r.k_left), r.Ta_min + y[i] * (r.Ta_max - r.Ta_min)) for i, r in g.iterrows()]
+        E = R6(E)
+        seg = [(r.k_left + S * (r.k_right - r.k_left), r.Ta_min + y[i] * (r.Ta_max - r.Ta_min),
+                r.Ta_min + smooth_branch(y[i]) * (r.Ta_max - r.Ta_min)) for i, r in g.iterrows()]
+        branches[n][E] = seg                                  # one entry per predicted mode
+        pieces = [(k, ta) for k, ta, _ in seg]
         curve_on_grid[n][E] = assemble(pieces)
-        kp = np.concatenate([p[0] for p in pieces]); Tp = np.concatenate([p[1] for p in pieces]); o = np.argsort(kp); kp, Tp = kp[o], Tp[o]
-        gt = curves[E]; kt, Tt = gt.k.values, gt.Ta.values; Ti = np.interp(kt, kp, Tp, left=np.nan, right=np.nan); v = ~np.isnan(Ti)
-        per_E.append(dict(model=n, E=E, n_branches_pred=len(g), Ta_c_true=Tt.min(), k_c_true=kt[np.argmin(Tt)], Ta_c_pred=Tp.min(), k_c_pred=kp[np.argmin(Tp)],
-                          err_Ta_c_pct=100 * abs(Tp.min() / Tt.min() - 1), err_k_c=abs(kp[np.argmin(Tp)] - kt[np.argmin(Tt)]),
-                          err_curve_pct=100 * np.mean(np.abs(Ti[v] / Tt[v] - 1))))
+        gt = curves[E]; kt, Tt = gt.k.values, gt.Ta.values
+        row = dict(model=n, E=E, n_branches_pred=len(g), Ta_c_true=Tt.min(), k_c_true=kt[np.argmin(Tt)])
+        for tag, col in [("", 1), ("_smooth", 2)]:
+            kp = np.concatenate([s[0] for s in seg]); Tp = np.concatenate([s[col] for s in seg])
+            o = np.argsort(kp); kp, Tp = kp[o], Tp[o]
+            Ti = np.interp(kt, kp, Tp, left=np.nan, right=np.nan); v = ~np.isnan(Ti)
+            row.update({f"Ta_c_pred{tag}": Tp.min(), f"k_c_pred{tag}": kp[np.argmin(Tp)],
+                        f"err_Ta_c_pct{tag}": 100 * abs(Tp.min() / Tt.min() - 1),
+                        f"err_k_c{tag}": abs(kp[np.argmin(Tp)] - kt[np.argmin(Tt)]),
+                        f"err_curve_pct{tag}": 100 * np.mean(np.abs(Ti[v] / Tt[v] - 1))})
+        per_E.append(row)
 per_E = pd.DataFrame(per_E); per_E.to_csv(OUT / "per_E_predictions.csv", index=False)
-summary = per_E.groupby("model")[["err_Ta_c_pct", "err_k_c", "err_curve_pct"]].mean().loc[MODELS]
+summary = per_E.groupby("model")[["err_Ta_c_pct", "err_k_c", "err_curve_pct",
+                                 "err_Ta_c_pct_smooth", "err_k_c_smooth", "err_curve_pct_smooth"]].mean().loc[MODELS]
 print(summary.round(3).to_string())
+print("(les colonnes _smooth : memes predictions, filtrees a l'interieur de chaque branche)")
 np.savez(OUT / "predicted_curves.npz", k=kk, E=np.array(test_E), **{n.split(" ")[0] + ("_cond" if "cond" in n else "") : np.stack([curve_on_grid[n][E] for E in test_E]) for n in MODELS})
 
 # ---------------------------------------------------------------- figures
@@ -185,9 +205,14 @@ def panel(ax, E, zoom=None, legend=False, errors=True):
     kp_, hp_ = true_peaks(E); ax.plot(kp_, hp_, "v", color="k", ms=7, zorder=6, label="pics entre modes (Floquet)")
     ax.plot(kk[np.nanargmin(t)], np.nanmin(t), "*", color="k", ms=13, zorder=7)
     for n in MODELS:
-        c = curve_on_grid[n][E]; m = ok & ~np.isnan(c)
-        ax.plot(kk[m], c[m], color=COL[n], ls=LS[n], lw=1.6, label=n, zorder=8)
-        ax.plot(kk[m][np.argmin(c[m])], np.min(c[m]), "o", color=COL[n], ms=5, mfc="white", mew=1.5, zorder=9)
+        seg = branches[n][E]
+        for j, (kb, _, tb) in enumerate(seg):                 # one line per predicted mode
+            ax.plot(kb, tb, color=COL[n], ls=LS[n], lw=1.6, zorder=8,
+                    label=n if j == 0 else None)
+        kall = np.concatenate([s[0] for s in seg]); tall = np.concatenate([s[2] for s in seg])
+        i = int(np.argmin(tall)); ax.plot(kall[i], tall[i], "o", color=COL[n], ms=5, mfc="white", mew=1.5, zorder=9)
+    for kb, _, _ in branches[MODELS[1]][E][1:]:               # junctions between predicted modes
+        ax.axvline(kb[0], color="0.8", lw=0.8, ls=":", zorder=1)
     if zoom:
         ax.set_xlim(*zoom[0]); ax.set_ylim(*zoom[1])
     else:
@@ -197,7 +222,7 @@ def panel(ax, E, zoom=None, legend=False, errors=True):
     ax.set_xlabel("k"); ax.set_ylabel("Ta")
     if errors:
         txt = "erreur sur Ta$_c$ / courbe :\n" + "\n".join(
-            f"{n.split(' (')[0]} : {fr(per_E[(per_E.model == n) & (per_E.E == E)].err_Ta_c_pct.iloc[0])} % / {fr(per_E[(per_E.model == n) & (per_E.E == E)].err_curve_pct.iloc[0])} %" for n in MODELS)
+            f"{n.split(' (')[0]} : {fr(per_E[(per_E.model == n) & (per_E.E == E)].err_Ta_c_pct_smooth.iloc[0])} % / {fr(per_E[(per_E.model == n) & (per_E.E == E)].err_curve_pct_smooth.iloc[0])} %" for n in MODELS)
         ax.text(0.98, 0.97, txt, transform=ax.transAxes, ha="right", va="top", fontsize=6.8,
                 bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="0.7", alpha=0.9), zorder=10)
     if legend: ax.legend(fontsize=7, loc="upper left")
@@ -209,7 +234,8 @@ picks = [test_E[int(round(q))] for q in np.linspace(0, len(test_E) - 1, 9)]
 fig, axs = plt.subplots(3, 3, figsize=(16, 13)); axs = axs.ravel()
 for i, (ax, E) in enumerate(zip(axs, picks)): panel(ax, E, legend=(i == 0))
 fig.suptitle("Courbes marginales prédites sur 9 élasticités de test jamais vues (réparties régulièrement, sans sélection)\n"
-             "Modèles réentraînés sans fuite : descripteurs et ancrages interpolés depuis les voisins.   ★ : (k$_c$, Ta$_c$) Floquet ;  ○ : minimum prédit", fontsize=12)
+             "Modèles réentraînés sans fuite ; chaque mode est tracé comme une branche à part, filtrée à l'intérieur de la branche.\n"
+             "★ : (k$_c$, Ta$_c$) Floquet ;  ○ : minimum prédit ;  pointillés verticaux : jonctions entre modes prédits", fontsize=12)
 fig.tight_layout(rect=(0, 0, 1, 0.95)); fig.savefig(OUT / "fig_cas_courbes.png", dpi=130); pdf.savefig(fig); plt.close(fig)
 
 # B: zooms on the peaks between modes (test elasticities with at least two peaks)

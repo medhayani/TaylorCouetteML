@@ -305,6 +305,15 @@ python leakfree/feature_importance.py              # what the 23 descriptors bri
 python leakfree/predictions_cases.py               # the figures of the test elasticities
 ```
 
+In those figures every predicted mode is drawn as its own branch and is
+lightly filtered inside the branch (Savitzky-Golay, 9 points of 101), never
+across a cusp; the filter is for reading only and moves the errors by less
+than 0.12 point of per cent (both values are printed by the script and kept
+in `results/predictions/per_E_predictions.csv`).
+
+```bash
+```
+
 Each script writes its metrics under `results/` and its figures under
 the folder named in its header; the values quoted above are exactly
 those files.
