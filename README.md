@@ -305,11 +305,14 @@ python leakfree/feature_importance.py              # what the 23 descriptors bri
 python leakfree/predictions_cases.py               # the figures of the test elasticities
 ```
 
-In those figures every predicted mode is drawn as its own branch and is
-lightly filtered inside the branch (Savitzky-Golay, 9 points of 101), never
-across a cusp; the filter is for reading only and moves the errors by less
-than 0.12 point of per cent (both values are printed by the script and kept
-in `results/predictions/per_E_predictions.csv`).
+In those figures every predicted mode is drawn as its own branch, and the
+comparison stops at k = 20, the range the branch table covers. Inside a
+branch the prediction is lightly filtered (Savitzky-Golay, 9 points of 101)
+with a weight that falls to zero at both ends, so the peaks where one mode
+gives way to the next keep their predicted value exactly. The filter is for
+reading only and moves the errors by less than 0.12 point of per cent; both
+values are printed by the script and kept in
+`results/predictions/per_E_predictions.csv`.
 
 ```bash
 ```

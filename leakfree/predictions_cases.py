@@ -21,10 +21,19 @@ from scipy.signal import find_peaks, savgol_filter
 SMOOTH_WIN, SMOOTH_ORDER = 9, 3          # light filter inside one branch (101 points)
 
 
-def smooth_branch(y):
+def smooth_branch(y, edge=0.12):
     """Remove the small oscillations of the network inside one branch.
-    Applied per branch, so the cusps between modes are untouched."""
-    return np.clip(savgol_filter(y, SMOOTH_WIN, SMOOTH_ORDER, mode="interp"), 0.0, 1.0)
+
+    The filter is applied branch by branch and its weight falls to zero over
+    the last `edge` of each side, so the ends of the branch -- that is, the
+    peaks where one mode gives way to the next -- keep their predicted value
+    exactly.  Only the interior of a mode is straightened.
+    """
+    ys = savgol_filter(y, SMOOTH_WIN, SMOOTH_ORDER, mode="interp")
+    s = np.linspace(0.0, 1.0, len(y))
+    w = np.clip(np.minimum(s, 1.0 - s) / edge, 0.0, 1.0)
+    w = 0.5 - 0.5 * np.cos(np.pi * w)                    # smooth ramp, 0 at both ends
+    return np.clip(w * ys + (1.0 - w) * y, 0.0, 1.0)
 
 REPO = Path(__file__).resolve().parents[1]            # repository root
 OUT = REPO / "results/predictions"; OUT.mkdir(parents=True, exist_ok=True)
@@ -190,8 +199,13 @@ nb_true = pd.read_csv(REPO / "data/branch_functional_descriptors.csv").groupby("
 nb_true = {R6(e): int(c) for e, c in nb_true.items()}
 
 
+KMAX_PLOT = 20.0      # the branch table stops at k = 20: the figures compare on that range only
+
+
 def truth_on_grid(E):
-    g = curves[E]; return np.interp(kk, g.k.values, g.Ta.values, left=np.nan, right=np.nan)
+    g = curves[E]
+    t = np.interp(kk, g.k.values, g.Ta.values, left=np.nan, right=np.nan)
+    return np.where(kk <= KMAX_PLOT + 1e-9, t, np.nan)
 
 
 def true_peaks(E):
