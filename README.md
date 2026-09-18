@@ -113,6 +113,9 @@ data/                      Floquet database and the tables the models read
   rl_windows/rl_switch_windows_lf_*.npz  corrected RL windows (49 points, 9 channels)
 models_trained/            leak-free weights, 5 seeds each, with their normalisation statistics
   cnp/  cnp_nbr/  cnp_block/  dist/  sarl/
+  marl/                                  training histories only: one MARL checkpoint
+                                         weighs 111 MB, above the 100 MB limit of GitHub;
+                                         colab/marl_lf2.ipynb retrains it in ~20 min per seed
 code/                      architectures (models/) and window dataset (data_pipeline/)
 train/                     training scripts: teachers, CNP, DIST, SARL and MARL
 leakfree/                  leak-free inputs, prediction, evaluation and analysis
@@ -171,7 +174,8 @@ elasticities was seen during training, in any form.
 | **CNP conditioned on the neighbours** | **1.29 %** | **0.71** | **1.38 %** | `results/cnp_nbr/metrics.json` |
 | DIST (distilled student, 5 seeds) | 1.56 % | 1.16 | 2.53 % | `results/dist/metrics.json` |
 | Median of the 29 teachers | 1.55 % | 1.03 | 1.52 % | `results/teachers/metrics.json` |
-| Median + RL refiner (SARL, 5 seeds) | 1.58 % | 1.03 | 1.51 % | `results/rl/metrics.json` |
+| Median + SARL refiner (5 seeds) | 1.58 % | 1.03 | 1.51 % | `results/rl/metrics.json` |
+| Median + MARL refiner (3 seeds) | 1.58 % | 1.03 | 1.54 % | `results/marl/metrics.json` |
 | Best single teacher (Envelope-SIREN) | 1.08 % | 0.67 | 1.84 % | `results/teachers/metrics.json` |
 | PCHIP interpolation of the critical values | 0.17 % | 0.30 | -- | `results/baselines/metrics.json` |
 | PCHIP interpolation of the curves (2-D) | 0.20 % | 0.03 | 0.37 % | `results/baselines/metrics.json` |
@@ -243,8 +247,13 @@ already carry.
    0.0278 -> 0.0286, peaks recovered 71 % -> 72 %. With the leak it
    was given the true position of the exchange and the error of the
    base; without them it has nothing left to correct with.
-5. **MARL.** The multi-agent variant diverged at epoch 100 in the
-   leak-free run and is not shipped.
+5. **MARL.** The multi-agent variant first diverged: its policy is
+   stochastic and the sampled actions saturated the tanh, where the
+   gradient vanishes. The trainer now builds the correction from the mean
+   action, penalises the actions ten times more and decays the learning
+   rate without restarts. It then converges -- validation error 0.0215
+   for the base against 0.0183 -- but on the test set it changes nothing
+   either, exactly like SARL.
 
 The natural next step, for whoever continues this work: detect the
 exchanges that the segmentation misses, extend the branch table to
