@@ -25,6 +25,13 @@ from data_pipeline.dataset import HydraWindowsDataset
 from models.marl_3sac.marl_model import MARLProSystem
 
 
+def deterministic_actions(marl, obs_seq, static_vec):
+    """Mean action of every agent: no sampling noise, hence no tanh saturation."""
+    h = marl.encode(obs_seq, static_vec)
+    return [torch.tanh(ag.actor.mean(ag.actor.body(h[:, i, :])))
+            for i, ag in enumerate(marl.agents)]
+
+
 def reconstruct_correction(actions, T: int) -> torch.Tensor:
     a_loc, a_sh, a_geo = actions
     B = a_loc.size(0)
@@ -49,8 +56,7 @@ def train_one_seed(seed, args, cfg, device, train_ds, val_ds, out_seed):
     tl = DataLoader(train_ds, batch_size=args.batch, shuffle=True, drop_last=True)
     vl = DataLoader(val_ds, batch_size=args.batch)
     optim = torch.optim.AdamW(marl.parameters(), lr=args.lr, weight_decay=1e-5)
-    sched = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-        optim, T_0=max(args.epochs // 3, 50), T_mult=2)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=args.epochs)
 
     history = []; best_val = float("inf"); t0 = time.time()
     for ep in range(1, args.epochs + 1):
@@ -60,15 +66,19 @@ def train_one_seed(seed, args, cfg, device, train_ds, val_ds, out_seed):
             b = {k: v.to(device) for k, v in b.items()}
             target = (b["y_true"] - b["y_pred"]).clamp(-1.0, 1.0)
             T = target.shape[1]
-            actions = marl.sample_actions(b["obs_seq"], b["static_vec"])
+            actions = deterministic_actions(marl, b["obs_seq"], b["static_vec"])
             delta = reconstruct_correction(actions, T)
             bc_loss = F.mse_loss(delta, target)
-            l2_act = sum((a ** 2).mean() for a in actions) * 1e-4
+            l2_act = sum((a ** 2).mean() for a in actions) * 1e-3
             loss = bc_loss + l2_act
+            if not torch.isfinite(loss):
+                continue
             optim.zero_grad(); loss.backward()
             torch.nn.utils.clip_grad_norm_(marl.parameters(), 1.0)
-            optim.step(); sched.step(ep + an / max(len(tl), 1))
+            optim.step()
             ag += float(loss); an += 1
+
+        sched.step()
 
         # Validation
         marl.eval()
@@ -77,7 +87,7 @@ def train_one_seed(seed, args, cfg, device, train_ds, val_ds, out_seed):
             for b in vl:
                 b = {k: v.to(device) for k, v in b.items()}
                 T = b["y_true"].shape[1]
-                actions = marl.sample_actions(b["obs_seq"], b["static_vec"])
+                actions = deterministic_actions(marl, b["obs_seq"], b["static_vec"])
                 delta = reconstruct_correction(actions, T)
                 y_corr = b["y_pred"] + delta
                 v_mae += float((y_corr - b["y_true"]).abs().sum())
