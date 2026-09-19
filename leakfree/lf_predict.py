@@ -12,9 +12,13 @@ Models (weights in models_trained/):
     cnp_nbr   the same, conditioned on the curve interpolated from the
               neighbours, given as 32 context points
     dist      distilled spectral transformer (model 2)
-    sarl      median of the 29 teachers, refined by the RL agent at the cusps
-              (model 3); available for the elasticities of the database, for
-              which the median and the windows are shipped
+    sarl      median of the 29 teachers, refined by the single SAC agent at
+              the cusps (model 3)
+    marl      the same median, refined by the three SAC agents with
+              cross-attention; the eight scalars they emit are turned into a
+              correction by an analytic form
+Both refiners are available for the elasticities of the database, for which
+the median of the teachers and the windows are shipped.
 """
 from __future__ import annotations
 
@@ -37,7 +41,7 @@ FEATS = ["log10E", "branch_order_norm", "width_k", "width_asymmetry", "rise_asym
          "slope_right_local", "global_slope", "curvature_at_min", "roughness_rmse", "normalized_arc_length",
          "has_switch_left", "has_switch_right", "mean_abs_curvature", "amplitude", "n_branches", "is_first_branch",
          "is_last_branch", "left_width", "right_width", "left_rise", "right_rise", "mean_abs_slope"]
-MODELS = ("cnp", "cnp_nbr", "dist", "sarl")
+MODELS = ("cnp", "cnp_nbr", "dist", "sarl", "marl")
 S = np.linspace(0.0, 1.0, 101)
 TAPER = 0.20
 R6 = lambda e: round(float(e), 6)                                            # noqa: E731
@@ -133,16 +137,14 @@ def _shapes_dist(rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
     return np.median(np.stack(out), 0)                                       # median over the seeds
 
 
-def _shapes_sarl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
-    """Median of the 29 teachers, refined by the RL agent inside its window."""
+def _median_and_windows(repo: Path, rows: pd.DataFrame):
+    """Base curve of the refiners: median of the 29 teachers, and their windows."""
     from data_pipeline.dataset import HydraWindowsDataset
-    from models.sac_pro.feature_extractor import SARLProFeatureExtractor
-    from models.sac_pro.sac_pro import SACPro
     med = np.load(repo / "data" / "ensemble_median_targets_lf.npz")
     mkey = {(R6(e), int(b)): i for i, (e, b) in enumerate(zip(med["E"], med["branch_local_id"]))}
     missing = [int(r.branch_local_id) for _, r in rows.iterrows() if (R6(r.E), int(r.branch_local_id)) not in mkey]
     if missing:
-        raise SystemExit("the RL refiner works on the elasticities of the database only "
+        raise SystemExit("the refiners work on the elasticities of the database only "
                          "(the median of the teachers is shipped for those); use --model cnp_nbr or dist instead")
     base = np.stack([med["ta_norm_median"][mkey[(R6(r.E), int(r.branch_local_id))]] for _, r in rows.iterrows()])
     windows = {}
@@ -152,6 +154,30 @@ def _shapes_sarl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
             z = HydraWindowsDataset(f)
             for i, (e, b) in enumerate(zip(z.E, z.branch_local_id)):
                 windows[(R6(e), int(b))] = (z, i)
+    return base, windows
+
+
+def _apply_window(base_i: np.ndarray, ds, j: int, corr: np.ndarray) -> np.ndarray:
+    """Put the correction of a window back on the 101 points of the branch."""
+    c0 = float(ds.center_pred[j]); h = float(ds.window_half_width[j])
+    full = np.interp(S, np.clip(c0 + h * ds.local_grid[j], 0, 1), corr, left=0.0, right=0.0)
+    d = np.abs(S - c0) / max(h, 1e-9)
+    taper = np.where(d <= 1 - TAPER, 1.0, np.where(d >= 1, 0.0,
+                     0.5 * (1 + np.cos(np.pi * (d - (1 - TAPER)) / TAPER))))
+    return np.clip(base_i + taper * full, 0.0, 1.0)
+
+
+def _seed_weights(vals) -> np.ndarray:
+    """Seeds weighted by the inverse of their best validation error."""
+    w = np.array([1.0 / (v + 1e-6) for v in vals])
+    return w / w.sum()
+
+
+def _shapes_sarl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
+    """Median of the 29 teachers, refined by the single SAC agent inside its window."""
+    from models.sac_pro.feature_extractor import SARLProFeatureExtractor
+    from models.sac_pro.sac_pro import SACPro
+    base, windows = _median_and_windows(repo, rows)
     agents = []
     for ck_pt in sorted(model_dir.glob("seed_*/best.pt")):
         st = torch.load(ck_pt, map_location="cpu", weights_only=False); cfg = st["cfg"]
@@ -161,7 +187,7 @@ def _shapes_sarl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
         ext.load_state_dict(st["extractor"]); sac.load_state_dict(st["sac"]); ext.eval(); sac.eval()
         v = json.load(open(ck_pt.parent / "history.json"))
         agents.append((ext, sac, min(r["val_mae"] for r in v if r.get("val_mae") is not None)))
-    w_seed = np.array([1.0 / (v + 1e-6) for _, _, v in agents]); w_seed /= w_seed.sum()
+    w_seed = _seed_weights([v for _, _, v in agents])
     for i, (_, r) in enumerate(rows.iterrows()):
         key = (R6(r.E), int(r.branch_local_id))
         if key not in windows:
@@ -171,12 +197,58 @@ def _shapes_sarl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
         with torch.no_grad():
             corr = sum(w * torch.tanh(sac.actor.mean(sac.actor.body(ext(obs, sv)))).numpy()[0]
                        for (ext, sac, _), w in zip(agents, w_seed))
-        c0 = float(ds.center_pred[j]); h = float(ds.window_half_width[j])
-        full = np.interp(S, np.clip(c0 + h * ds.local_grid[j], 0, 1), corr, left=0.0, right=0.0)
-        d = np.abs(S - c0) / max(h, 1e-9)
-        taper = np.where(d <= 1 - TAPER, 1.0, np.where(d >= 1, 0.0,
-                         0.5 * (1 + np.cos(np.pi * (d - (1 - TAPER)) / TAPER))))
-        base[i] = np.clip(base[i] + taper * full, 0.0, 1.0)
+        base[i] = _apply_window(base[i], ds, j, corr)
+    return base
+
+
+def _marl_correction(actions, T: int) -> torch.Tensor:
+    """The correction of the window, from the eight scalars of the three agents."""
+    a_loc, a_sh, a_geo = actions
+    s = torch.linspace(0, 1, T).unsqueeze(0).expand(a_loc.size(0), T)
+    dc = a_loc[:, 0:1] * 0.5 + 0.5                       # centre of the bump
+    da = a_loc[:, 1:2] * 0.5                             # its amplitude
+    bump = da * torch.exp(-((s - dc) ** 2) / (2 * 0.05 ** 2))
+    sh = a_sh[:, 0:1] + a_sh[:, 1:2] * bump              # shape agent
+    sl, sr, w, asy = a_geo[:, 0:1], a_geo[:, 1:2], a_geo[:, 2:3], a_geo[:, 3:4]
+    geo = (sl * (s - dc).clamp(max=0) + sr * (s - dc).clamp(min=0)
+           + w * (s - dc).abs() + asy * (s - 0.5))       # geometry agent
+    return sh + 0.1 * geo
+
+
+def _shapes_marl(repo: Path, rows: pd.DataFrame, model_dir: Path) -> np.ndarray:
+    """The same median, refined by the three SAC agents with cross-attention."""
+    import yaml
+    from models.marl_3sac.marl_model import MARLProSystem
+    base, windows = _median_and_windows(repo, rows)
+    cfg = yaml.safe_load((repo / "code/configs/sizes.yaml").read_text(encoding="utf-8"))["marl_pro"]
+    cfg["agent_features"].setdefault("seq_out", cfg["agent_features"]["seq_hidden"])   # as in the trainer
+    ckpts = sorted(model_dir.glob("seed_*/best.pt")) or sorted(model_dir.glob("seed_*/best_fp16.pt"))
+    if not ckpts:
+        raise SystemExit(f"weights not found: {model_dir}/seed_*/best*.pt")
+    systems = []
+    for ck in ckpts:            # half precision shipped: one float32 file exceeds the limit of GitHub
+        any_ds = next(iter(windows.values()))[0]
+        m = MARLProSystem(obs_seq_dim=any_ds.obs_seq.shape[2], obs_seq_T=any_ds.obs_seq.shape[1],
+                          static_dim=any_ds.static_vec.shape[1], cfg=cfg)
+        sd = torch.load(ck, map_location="cpu")["state_dict"]
+        m.load_state_dict({k: (v.float() if v.is_floating_point() else v) for k, v in sd.items()})
+        m.eval()
+        hist = json.loads((ck.parent / "history.json").read_text())
+        systems.append((m, min(r["val_mae"] for r in hist if r.get("val_mae") is not None)))
+    w_seed = _seed_weights([v for _, v in systems])
+    for i, (_, r) in enumerate(rows.iterrows()):
+        key = (R6(r.E), int(r.branch_local_id))
+        if key not in windows:
+            continue
+        ds, j = windows[key]
+        obs = torch.from_numpy(ds.obs_seq[j:j + 1]); sv = torch.from_numpy(ds.static_vec[j:j + 1])
+        corr = np.zeros(obs.shape[1])
+        with torch.no_grad():
+            for (m, _), w in zip(systems, w_seed):
+                h = m.encode(obs, sv)
+                acts = [torch.tanh(ag.actor.mean(ag.actor.body(h[:, a, :]))) for a, ag in enumerate(m.agents)]
+                corr = corr + w * _marl_correction(acts, obs.shape[1]).numpy()[0]
+        base[i] = _apply_window(base[i], ds, j, corr)
     return base
 
 
@@ -191,6 +263,8 @@ def shapes(db: Database, rows: pd.DataFrame, model: str) -> np.ndarray:
         return _shapes_dist(rows, d)
     if model == "sarl":
         return _shapes_sarl(db.repo, rows, d)
+    if model == "marl":
+        return _shapes_marl(db.repo, rows, d)
     raise SystemExit(f"unknown model: {model} (choose from {', '.join(MODELS)})")
 
 

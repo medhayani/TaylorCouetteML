@@ -150,24 +150,29 @@ refiner consume. The notebooks retrain them from scratch.
 
 ---
 
-## Quickstart
+## Install and run
+
+Python 3.9 or later. A CPU is enough: a prediction takes about a second,
+no GPU is needed to use the models --- only to retrain them.
 
 ```bash
-pip install torch numpy pandas scipy matplotlib
-python predict.py --E 0.001                       # conditioned CNP (default)
-python predict.py --E 0.0043 --model dist         # any elasticity, inside or outside the database
-python predict.py --E 0.06 --save curve.png --csv curve.csv
-python predict_critical.py --n 40 --save critical.png
-python predict_critical.py --test-only --model dist
+git clone --depth 1 https://github.com/medhayani/TaylorCouetteML.git
+cd TaylorCouetteML
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-`--model` is one of `cnp` (zero-shot), `cnp_nbr` (conditioned on the
-neighbours, default), `dist` (distilled transformer) or `sarl` (median
-of the teachers refined by the RL agent; available for the
-elasticities of the database, for which the median is shipped).
+The clone brings about 1.1 GB: 46 MB of Floquet data and 1 GB of weights.
+`--depth 1` takes the last commit only; drop it to get the whole history.
 
-Every prediction prints the neighbours it used, so that the leak-free
-chain stays visible:
+**One elasticity.** `predict.py` writes the marginal curve of the
+elasticity asked for, and its critical point:
+
+```bash
+python predict.py --E 0.0055                          # conditioned CNP, the default
+python predict.py --E 0.06 --save curve.png --csv curve.csv
+```
 
 ```
 E = 0.0055   model = cnp_nbr   (test)
@@ -175,6 +180,48 @@ E = 0.0055   model = cnp_nbr   (test)
   Ta_c = 154.308   k_c = 4.70
   Floquet: Ta_c = 154.270  k_c = 4.70   |   error 0.02 % on Ta_c, 0.00 on k_c
 ```
+
+The neighbours are printed at every call: the leak-free chain stays
+visible. The last line appears only when the elasticity belongs to the
+database, and compares with the Floquet computation.
+
+**Choosing the model.** `--model` takes one of five:
+
+| `--model` | What it predicts | Where it works |
+|---|---|---|
+| `cnp_nbr` | CNP conditioned on the curve interpolated from the two neighbours (default) | any $`E\in[10^{-4},10]`$ |
+| `cnp` | the same network, zero-shot: descriptors and anchors only | any $`E`$ |
+| `dist` | spectral transformer distilled from the 29 teachers | any $`E`$ |
+| `sarl` | median of the 29 teachers, refined by one SAC agent at the cusps | the 420 elasticities of the database |
+| `marl` | the same median, refined by three SAC agents with cross-attention | the 420 elasticities of the database |
+
+```bash
+python predict.py --E 0.0043 --model dist
+python predict.py --E 0.0009 --model marl
+```
+
+The two refiners work on the elasticities of the database, the ones for
+which the median of the teachers and the windows are shipped; elsewhere
+they stop and tell you to use `cnp_nbr` or `dist`. On the held-out
+elasticities `cnp_nbr` is the most accurate of the five, and none of them
+beats a plain interpolation of the same data --- the table below says by
+how much, and the *Known limits* section says why.
+
+**A range of elasticities.** `predict_critical.py` follows
+$`\mathrm{Ta}_c(E)`$ and $`k_c(E)`$:
+
+```bash
+python predict_critical.py --n 40 --save critical.png       # 40 elasticities, log-spaced
+python predict_critical.py --test-only --model dist         # the 64 held-out elasticities
+python predict_critical.py --E-min 0.01 --E-max 1 --n 25 --csv critical.csv
+```
+
+With `--test-only` the script ends on the mean error of the model over
+the 64 elasticities it never saw.
+
+Other options: `--margin` widens the interpolated anchors (0.05 by
+default), `--no-truth` leaves the Floquet curve out of the figure,
+`--csv` writes the numbers next to the figure.
 
 ---
 
@@ -365,6 +412,7 @@ python leakfree/eval_rl_lf.py         --repo . --rl_run models_trained/sarl \
        --median data/ensemble_median_targets_lf.npz \
        --desc data/branch_functional_descriptors_leakfree_all.csv \
        --split data/split_by_E.csv --out results/rl --agg weighted
+python leakfree/eval_marl_lf.py                    # the three agents with cross-attention
 python leakfree/modes_test.py                      # peaks and mode exchanges
 python leakfree/rl_peaks_test.py                   # peaks, with and without the RL refiner
 python leakfree/feature_importance.py              # what the 23 descriptors bring
@@ -379,9 +427,6 @@ gives way to the next keep their predicted value exactly. The filter is for
 reading only and moves the errors by less than 0.12 point of per cent; both
 values are printed by the script and kept in
 `results/predictions/per_E_predictions.csv`.
-
-```bash
-```
 
 Each script writes its metrics under `results/` and its figures under
 the folder named in its header; the values quoted above are exactly
