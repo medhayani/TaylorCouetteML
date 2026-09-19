@@ -19,38 +19,27 @@ upper-convected Maxwell (UCM) fluid with co-oscillating cylinders
 
 ---
 
-## Configuration and provenance of the Floquet data
+## The Floquet data
 
-**Wall condition.** Both cylinders oscillate **in phase** about a zero
-mean, Omega_1(t) = Omega_2(t) = Omega_0 cos(omega t): the co-oscillating
-cell of Hayani Choujaa et al., Phys. Fluids 33, 074105 (2021) and
-J. Non-Newtonian Fluid Mech. 325, 105202 (2024). It is *not* the
-counter-oscillating cell (Omega_2 = -Omega_1) of Nonlinear Dyn. 114,
-15 (2026), which is a different flow with different critical values
-(at gamma = 5, E = 0.01: k_c = 9.5 here against 5.0 there).
+**Wall condition.** Both cylinders oscillate in phase about a zero mean,
 
-**Parameters.** gamma = 5 (omega d^2/nu = 50), epsilon = d/R_1 = 0.14,
-UCM fluid without solvent, 420 elasticities in E = [1e-4, 10].
+```math
+\Omega_1(t)=\Omega_2(t)=\Omega_0\cos(\omega t),
+```
+
+the co-oscillating cell of Hayani Choujaa et al., Phys. Fluids 33,
+074105 (2021) and J. Non-Newtonian Fluid Mech. 325, 105202 (2024).
+
+**Parameters.** $`\gamma=\omega d^{2}/\nu=5`$,
+$`\varepsilon=d/R_1=0.14`$, UCM fluid without solvent, 420 elasticities
+in $`E\in[10^{-4},10]`$.
 
 **Data.** `data/combined_data.csv` is the concatenation, in absolute
 value, of the raw solver output, one file per elasticity
-(`E_<value>.csv`, columns Ta, k), computed by the spectral-Floquet
-solver of the references above with the in-phase wall condition
-(`epp = +1` in the MATLAB operator). This file has not changed since
-the first commit of the repository (same git blob in every commit).
-
-**Erratum.** The first version of this README (commit 8a61d05, May
-2026) called the cylinders counter-oscillating. That sentence was
-wrong and was corrected in commit 073cac5 (August 2026). The data
-were never modified.
-
-**Check.** `floquet_check/verify_epp.m` recomputes the Floquet
-multipliers at tabulated critical points with *both* wall conditions
-(`epp = +1`, in phase; `epp = -1`, in opposition) and refines the
-threshold. With the in-phase condition the tabulated thresholds are
-recovered to 0.0-0.3 % at the low-elasticity points that the
-operator resolves at N = 12-16; with the opposite condition they are
-missed by 2-7 %. Details and limits in `floquet_check/README.md`.
+(`E_<value>.csv`, columns $`\mathrm{Ta}`$ and $`k`$), computed by the
+spectral-Floquet solver of the references above. This file has not
+changed since the first commit of the repository: same git blob in
+every commit.
 
 ---
 
