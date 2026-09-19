@@ -213,6 +213,46 @@ dominant mode inside the band are missed by all of them. This is the
 honest limit of the surrogate: it interpolates the map, it does not
 extrapolate a bifurcation it has never seen.
 
+**The 23 descriptors of a branch.** `w = k_R - k_L`; `A = Ta_max - Ta_min`;
+`Ta_L`, `Ta_R` are the values at the two ends and `k_min` the position of
+the minimum. The six marked with a dagger are constant over the whole
+database in the pipeline used here.
+
+| Descriptor | Definition | What it says about the mode |
+|---|---|---|
+| log10E | log-elasticity | elasticity |
+| branch order † | rank of the branch along k, in [0,1] | place in the succession of modes |
+| number of branches † | branches at this elasticity | modes in competition |
+| first, last branch † | 1 for the first, for the last branch | long-, short-wavelength mode |
+| width | w = k_R - k_L | extent of the mode in k |
+| amplitude | A = Ta_max - Ta_min | height of the branch |
+| left, right width | k_min - k_L, k_R - k_min | position of the minimum |
+| left, right rise | Ta_L - Ta_min, Ta_R - Ta_min | height of the bounding peaks |
+| width asymmetry | (right - left width) / w | asymmetry in k |
+| rise asymmetry | (right - left rise) / A | asymmetry in height |
+| local slopes | least squares on the four points on each side of the minimum | steepness at the minimum |
+| global slope | slope over the whole branch | trend of the branch |
+| mean abs. slope | mean of abs(dTa/dk) | mean variation |
+| mean abs. curvature | mean of abs(d2Ta/dk2) | mean curvature |
+| curvature at minimum | d2Ta/dk2 at k_min | selectivity of the mode |
+| roughness | rms departure from the chord joining the two ends | departure from a straight branch |
+| arc length | length of Ta(k) divided by w | complexity of the shape |
+| switch left, right † | 1 if a mode exchange bounds the branch | presence of an edge peak |
+
+**Permutation importance**, input by input, on the 64 held-out
+elasticities: increase of the mean relative error on the marginal curve,
+in points of per cent, when the input is shuffled between branches (mean
+of five draws). Reference error without shuffling: 2.33 % for the
+zero-shot model, 1.38 % for the conditioned one.
+
+| Shuffled input | CNP zero-shot | CNP conditioned |
+|---|---|---|
+| log10 E | +19.9 | +13.3 |
+| anchors (k_L, k_R, Ta_min, Ta_max) | +17.9 | +2.4 |
+| neighbour-interpolated curve | -- | +20.9 |
+| the sixteen shape descriptors, together | +0.45 | +0.10 |
+| the six mode-organisation descriptors | 0 (constant) | 0 (constant) |
+
 **What the 23 descriptors actually bring**
 (`results/features/feature_importance.json`: permutation importance on
 the same 64 elasticities). Six of them are constant: the branch rank,
