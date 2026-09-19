@@ -73,12 +73,12 @@ put the branch back in the physical plane:
 For an elasticity $`E^{*}`$:
 
 1. its two nearest **training** elasticities are taken,
-   $`E_-<E^{*}<E_+`$, with $`E^{*}`$ itself excluded when it belongs to the
+   $`E_-\lt E^{*}\lt E_+`$, with $`E^{*}`$ itself excluded when it belongs to the
    training set, and the weight
 
    ```math
-w=\frac{\log_{10}E^{*}-\log_{10}E_-}{\log_{10}E_+-\log_{10}E_-};
-```
+   w=\frac{\log_{10}E^{*}-\log_{10}E_-}{\log_{10}E_+-\log_{10}E_-};
+   ```
 
 2. if both neighbours have the same number of branches, branches are
    matched by rank along $`k`$ and every quantity is interpolated,
