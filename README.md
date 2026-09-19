@@ -30,8 +30,8 @@ upper-convected Maxwell (UCM) fluid with co-oscillating cylinders
 the co-oscillating cell of Hayani Choujaa et al., Phys. Fluids 33,
 074105 (2021) and J. Non-Newtonian Fluid Mech. 325, 105202 (2024).
 
-**Parameters.** $`\gamma=\omega d^{2}/\nu=5`$,
-$`\varepsilon=d/R_1=0.14`$, UCM fluid without solvent, 420 elasticities
+**Parameters.** $`\gamma=\dfrac{\omega d^{2}}{\nu}=5`$,
+$`\varepsilon=\dfrac{d}{R_1}=0.14`$, UCM fluid without solvent, 420 elasticities
 in $`E\in[10^{-4},10]`$.
 
 **Data.** `data/combined_data.csv` is the concatenation, in absolute
@@ -244,15 +244,15 @@ database in the pipeline used here.
 | amplitude | $`A=\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}`$ | height of the branch |
 | left, right width | $`k_{\min}-k_L`$, $`k_R-k_{\min}`$ | position of the minimum |
 | left, right rise | $`\mathrm{Ta}_L-\mathrm{Ta}_{\min}`$, $`\mathrm{Ta}_R-\mathrm{Ta}_{\min}`$ | height of the bounding peaks |
-| width asymmetry | $`(\text{right}-\text{left width})/w`$ | asymmetry in $`k`$ |
-| rise asymmetry | $`(\text{right}-\text{left rise})/A`$ | asymmetry in height |
+| width asymmetry | $`\dfrac{(k_R-k_{\min})-(k_{\min}-k_L)}{w}`$ | asymmetry in $`k`$ |
+| rise asymmetry | $`\dfrac{(\mathrm{Ta}_R-\mathrm{Ta}_{\min})-(\mathrm{Ta}_L-\mathrm{Ta}_{\min})}{A}`$ | asymmetry in height |
 | local slopes | least squares on the four points on each side of the minimum | steepness at the minimum |
-| global slope | slope over the whole branch | trend of the branch |
-| mean abs. slope | mean of $`\lvert\mathrm{d}\mathrm{Ta}/\mathrm{d}k\rvert`$ | mean variation |
-| mean abs. curvature | mean of $`\lvert\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2\rvert`$ | mean curvature |
-| curvature at minimum | $`\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2`$ at $`k_{\min}`$ | selectivity of the mode |
-| roughness | rms departure from the chord joining the two ends | departure from a straight branch |
-| arc length | length of $`\mathrm{Ta}(k)`$ divided by $`w`$ | complexity of the shape |
+| global slope | least squares over the whole branch | trend of the branch |
+| mean abs. slope | mean of $`\left\lvert\dfrac{\mathrm{d}\mathrm{Ta}}{\mathrm{d}k}\right\rvert`$ | mean variation |
+| mean abs. curvature | mean of $`\left\lvert\dfrac{\mathrm{d}^{2}\mathrm{Ta}}{\mathrm{d}k^{2}}\right\rvert`$ | mean curvature |
+| curvature at minimum | $`\dfrac{\mathrm{d}^{2}\mathrm{Ta}}{\mathrm{d}k^{2}}`$ at $`k_{\min}`$ | selectivity of the mode |
+| roughness | $`\sqrt{\dfrac{1}{n}\sum_{i=1}^{n}\bigl(\mathrm{Ta}_i-c_i\bigr)^{2}}`$, $`c`$ the chord joining the two ends | departure from a straight branch |
+| arc length | $`\dfrac{L}{w}`$, $`L`$ the length of $`\mathrm{Ta}(k)`$ | complexity of the shape |
 | switch left, right † | 1 if a mode exchange bounds the branch | presence of an edge peak |
 
 **Permutation importance**, input by input, on the 64 held-out
