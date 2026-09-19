@@ -113,9 +113,10 @@ data/                      Floquet database and the tables the models read
   rl_windows/rl_switch_windows_lf_*.npz  corrected RL windows (49 points, 9 channels)
 models_trained/            leak-free weights, 5 seeds each, with their normalisation statistics
   cnp/  cnp_nbr/  cnp_block/  dist/  sarl/
-  marl/                                  training histories only: one MARL checkpoint
-                                         weighs 111 MB, above the 100 MB limit of GitHub;
-                                         colab/marl_lf2.ipynb retrains it in ~20 min per seed
+  marl/                                  three seeds, weights in half precision: a float32
+                                         checkpoint weighs 111 MB, above the 100 MB limit of
+                                         GitHub. The evaluation casts them back and returns
+                                         the same numbers to the seventh decimal.
 code/                      architectures (models/) and window dataset (data_pipeline/)
 train/                     training scripts: teachers, CNP, DIST, SARL and MARL
 leakfree/                  leak-free inputs, prediction, evaluation and analysis

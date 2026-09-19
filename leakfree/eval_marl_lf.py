@@ -46,9 +46,11 @@ def reconstruct(actions, T):
 ds = HydraWindowsDataset(REPO / "data/rl_windows/rl_switch_windows_lf_test.npz")
 obs, sv = torch.from_numpy(ds.obs_seq), torch.from_numpy(ds.static_vec)
 corrs, vmae = [], []
-for ck in sorted(RUN.glob("seed_*/best.pt")):
+ckpts = sorted(RUN.glob("seed_*/best.pt")) or sorted(RUN.glob("seed_*/best_fp16.pt"))
+for ck in ckpts:                       # half precision shipped here: one float32 file exceeds the limit of GitHub
     m = MARLProSystem(obs_seq_dim=obs.shape[2], obs_seq_T=obs.shape[1], static_dim=sv.shape[1], cfg=cfg)
-    m.load_state_dict(torch.load(ck, map_location="cpu")["state_dict"]); m.eval()
+    sd = torch.load(ck, map_location="cpu")["state_dict"]
+    m.load_state_dict({k: (v.float() if v.is_floating_point() else v) for k, v in sd.items()}); m.eval()
     with torch.no_grad():
         h = m.encode(obs, sv)
         acts = [torch.tanh(ag.actor.mean(ag.actor.body(h[:, i, :]))) for i, ag in enumerate(m.agents)]
