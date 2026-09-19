@@ -4,7 +4,7 @@
 &middot; Laboratoire de Mecanique, Faculte des Sciences Ain Chock, Universite Hassan II de Casablanca, Maroc
 
 Three neural-network surrogates for the linear-stability marginal
-curve $T_a(k,E)$ of an oscillatory Taylor-Couette flow in an
+curve $`T_a(k,E)`$ of an oscillatory Taylor-Couette flow in an
 upper-convected Maxwell (UCM) fluid with co-oscillating cylinders
 (the two cylinders oscillate in phase about a zero mean).
 
@@ -63,40 +63,46 @@ rule applied everywhere in this repository is therefore:
 > nothing of the marginal curve of the predicted elasticity enters the
 > inputs, the normalisation, or the choice of a checkpoint.
 
-**What a branch is.** A branch lives on $[k_L,k_R]$ and is described in a
+**What a branch is.** A branch lives on $`[k_L,k_R]`$ and is described in a
 canonical coordinate, on 101 points:
 
-$$s=\frac{k-k_L}{k_R-k_L}\in[0,1],\qquad
-  y(s)=\frac{\mathrm{Ta}\bigl(k(s)\bigr)-\mathrm{Ta}_{\min}}{\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}}\in[0,1].$$
+```math
+s=\frac{k-k_L}{k_R-k_L}\in[0,1],\qquad
+y(s)=\frac{\mathrm{Ta}\bigl(k(s)\bigr)-\mathrm{Ta}_{\min}}{\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}}\in[0,1].
+```
 
-The networks learn $y(s)$ and nothing else. Four anchors,
-$\mathbf{a}=(k_L,k_R,\log_{10}\mathrm{Ta}_{\min},\log_{10}\mathrm{Ta}_{\max})$,
+The networks learn $`y(s)`$ and nothing else. Four anchors,
+$`\mathbf{a}=(k_L,k_R,\log_{10}\mathrm{Ta}_{\min},\log_{10}\mathrm{Ta}_{\max})`$,
 put the branch back in the physical plane:
 
-$$\mathrm{Ta}(k)=\mathrm{Ta}_{\min}+\hat y(s)\,(\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}),
-  \qquad k=k_L+s\,(k_R-k_L).$$
+```math
+\mathrm{Ta}(k)=\mathrm{Ta}_{\min}+\hat y(s)\,(\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}),
+\qquad k=k_L+s\,(k_R-k_L).
+```
 
 **How the inputs are built** (`leakfree/leakfree_descriptors.py`).
-For an elasticity $E^{*}$:
+For an elasticity $`E^{*}`$:
 
 1. its two nearest **training** elasticities are taken,
-   $E_-<E^{*}<E_+$, with $E^{*}$ itself excluded when it belongs to the
+   $`E_-<E^{*}<E_+`$, with $`E^{*}`$ itself excluded when it belongs to the
    training set, and the weight
 
-   $$w=\frac{\log_{10}E^{*}-\log_{10}E_-}{\log_{10}E_+-\log_{10}E_-};$$
+   ```math
+w=\frac{\log_{10}E^{*}-\log_{10}E_-}{\log_{10}E_+-\log_{10}E_-};
+```
 
 2. if both neighbours have the same number of branches, branches are
-   matched by rank along $k$ and every quantity is interpolated,
-   $q^{*}=(1-w)\,q_-+w\,q_+$, with $\mathrm{Ta}_{\min}$ and
-   $\mathrm{Ta}_{\max}$ in logarithm; otherwise the whole structure of the
+   matched by rank along $`k`$ and every quantity is interpolated,
+   $`q^{*}=(1-w)\,q_-+w\,q_+`$, with $`\mathrm{Ta}_{\min}`$ and
+   $`\mathrm{Ta}_{\max}`$ in logarithm; otherwise the whole structure of the
    nearer neighbour is used;
 3. the interpolated anchors are widened by 5 %,
-   $\mathrm{Ta}_{\min}\leftarrow0.95\,\mathrm{Ta}_{\min}$ and
-   $\mathrm{Ta}_{\max}\leftarrow1.05\,\mathrm{Ta}_{\max}$, so that the true
-   curve stays inside $[0,1]$, the range the sigmoid head can reach;
+   $`\mathrm{Ta}_{\min}\leftarrow0.95\,\mathrm{Ta}_{\min}`$ and
+   $`\mathrm{Ta}_{\max}\leftarrow1.05\,\mathrm{Ta}_{\max}`$, so that the true
+   curve stays inside $`[0,1]`$, the range the sigmoid head can reach;
 4. for the conditioned CNP, the curves of the two neighbours are
    interpolated on the predicted support,
-   $\log\mathrm{Ta}^{\text{ctx}}(k)=(1-w)\log\mathrm{Ta}_-(k)+w\log\mathrm{Ta}_+(k)$,
+   $`\log\mathrm{Ta}^{\text{ctx}}(k)=(1-w)\log\mathrm{Ta}_-(k)+w\log\mathrm{Ta}_+(k)`$,
    and 32 points of it are supplied as context.
 
 **What this changed with respect to the first submission.** Five
@@ -105,11 +111,11 @@ here:
 
 | # | Point | Correction |
 |---|-------|------------|
-| 1 | descriptors and anchors were read on the curve of the predicted elasticity; on the dominant branch $\mathrm{Ta}_{\min}$ *is* the threshold being predicted | interpolated from the neighbours (above) |
+| 1 | descriptors and anchors were read on the curve of the predicted elasticity; on the dominant branch $`\mathrm{Ta}_{\min}`$ *is* the threshold being predicted | interpolated from the neighbours (above) |
 | 2 | the CNP script drew its own split, by branch and with a different seed per model, so every branch trained at least one of the five averaged models | one split by elasticity, 292 / 64 / 64, shared by every model and every seed (`data/split_by_E.csv`) |
 | 3 | six of the 23 scalars of the RL window were computed on the true curve (true centre of the exchange, its presence, absolute and relative distance to the predicted centre, mean and rms error of the base) | neutralised in every split |
 | 4 | the centre of the RL window came in part from a detector trained on the truth | curvature peak of the base prediction |
-| 5 | the target of the refiners was clamped to $[-2,2]$ while the action is bounded to $[-1,1]$ | clamped to $[-1,1]$ |
+| 5 | the target of the refiners was clamped to $`[-2,2]`$ while the action is bounded to $`[-1,1]`$ | clamped to $`[-1,1]`$ |
 
 **Cost of the correction.** With the leak, the published CNP reached
 1.91 % on Ta_c; without it, the same architecture reaches 1.53 %
@@ -233,31 +239,31 @@ dominant mode inside the band are missed by all of them. This is the
 honest limit of the surrogate: it interpolates the map, it does not
 extrapolate a bifurcation it has never seen.
 
-**The 23 descriptors of a branch.** Here $w=k_R-k_L$,
-$A=\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}$, $\mathrm{Ta}_L$ and $\mathrm{Ta}_R$
-are the values at the two ends, and $k_{\min}$ the position of the
+**The 23 descriptors of a branch.** Here $`w=k_R-k_L`$,
+$`A=\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}`$, $`\mathrm{Ta}_L`$ and $`\mathrm{Ta}_R`$
+are the values at the two ends, and $`k_{\min}`$ the position of the
 minimum. The six marked with a dagger are constant over the whole
 database in the pipeline used here.
 
 | Descriptor | Definition | What it says about the mode |
 |---|---|---|
-| $\log_{10}E$ | log-elasticity | elasticity |
-| branch order † | rank of the branch along $k$, in $[0,1]$ | place in the succession of modes |
+| $`\log_{10}E`$ | log-elasticity | elasticity |
+| branch order † | rank of the branch along $`k`$, in $`[0,1]`$ | place in the succession of modes |
 | number of branches † | branches at this elasticity | modes in competition |
 | first, last branch † | 1 for the first, for the last branch | long-, short-wavelength mode |
-| width | $w=k_R-k_L$ | extent of the mode in $k$ |
-| amplitude | $A=\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}$ | height of the branch |
-| left, right width | $k_{\min}-k_L$, $k_R-k_{\min}$ | position of the minimum |
-| left, right rise | $\mathrm{Ta}_L-\mathrm{Ta}_{\min}$, $\mathrm{Ta}_R-\mathrm{Ta}_{\min}$ | height of the bounding peaks |
-| width asymmetry | $(\text{right}-\text{left width})/w$ | asymmetry in $k$ |
-| rise asymmetry | $(\text{right}-\text{left rise})/A$ | asymmetry in height |
+| width | $`w=k_R-k_L`$ | extent of the mode in $`k`$ |
+| amplitude | $`A=\mathrm{Ta}_{\max}-\mathrm{Ta}_{\min}`$ | height of the branch |
+| left, right width | $`k_{\min}-k_L`$, $`k_R-k_{\min}`$ | position of the minimum |
+| left, right rise | $`\mathrm{Ta}_L-\mathrm{Ta}_{\min}`$, $`\mathrm{Ta}_R-\mathrm{Ta}_{\min}`$ | height of the bounding peaks |
+| width asymmetry | $`(\text{right}-\text{left width})/w`$ | asymmetry in $`k`$ |
+| rise asymmetry | $`(\text{right}-\text{left rise})/A`$ | asymmetry in height |
 | local slopes | least squares on the four points on each side of the minimum | steepness at the minimum |
 | global slope | slope over the whole branch | trend of the branch |
-| mean abs. slope | mean of $\lvert\mathrm{d}\mathrm{Ta}/\mathrm{d}k\rvert$ | mean variation |
-| mean abs. curvature | mean of $\lvert\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2\rvert$ | mean curvature |
-| curvature at minimum | $\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2$ at $k_{\min}$ | selectivity of the mode |
+| mean abs. slope | mean of $`\lvert\mathrm{d}\mathrm{Ta}/\mathrm{d}k\rvert`$ | mean variation |
+| mean abs. curvature | mean of $`\lvert\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2\rvert`$ | mean curvature |
+| curvature at minimum | $`\mathrm{d}^2\mathrm{Ta}/\mathrm{d}k^2`$ at $`k_{\min}`$ | selectivity of the mode |
 | roughness | rms departure from the chord joining the two ends | departure from a straight branch |
-| arc length | length of $\mathrm{Ta}(k)$ divided by $w$ | complexity of the shape |
+| arc length | length of $`\mathrm{Ta}(k)`$ divided by $`w`$ | complexity of the shape |
 | switch left, right † | 1 if a mode exchange bounds the branch | presence of an edge peak |
 
 **Permutation importance**, input by input, on the 64 held-out
@@ -268,8 +274,8 @@ zero-shot model, 1.38 % for the conditioned one.
 
 | Shuffled input | CNP zero-shot | CNP conditioned |
 |---|---|---|
-| $\log_{10}E$ | +19.9 | +13.3 |
-| anchors $(k_L,k_R,\mathrm{Ta}_{\min},\mathrm{Ta}_{\max})$ | +17.9 | +2.4 |
+| $`\log_{10}E`$ | +19.9 | +13.3 |
+| anchors $`(k_L,k_R,\mathrm{Ta}_{\min},\mathrm{Ta}_{\max})`$ | +17.9 | +2.4 |
 | neighbour-interpolated curve | -- | +20.9 |
 | the sixteen shape descriptors, together | +0.45 | +0.10 |
 | the six mode-organisation descriptors | 0 (constant) | 0 (constant) |
