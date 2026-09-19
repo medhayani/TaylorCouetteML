@@ -1,0 +1,32 @@
+[
+ {
+  "a": "mean_abs_slope",
+  "b": "normalized_arc_length",
+  "rho": 0.998
+ },
+ {
+  "a": "left_rise",
+  "b": "roughness_rmse",
+  "rho": 0.989
+ },
+ {
+  "a": "amplitude",
+  "b": "roughness_rmse",
+  "rho": 0.987
+ },
+ {
+  "a": "amplitude",
+  "b": "left_rise",
+  "rho": 0.986
+ },
+ {
+  "a": "slope_left_local",
+  "b": "curvature_at_min",
+  "rho": -0.934
+ },
+ {
+  "a": "slope_right_local",
+  "b": "curvature_at_min",
+  "rho": 0.907
+ }
+]
